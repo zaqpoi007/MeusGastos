@@ -118,7 +118,8 @@
     </div>
 
     <script>
-        const API_URL = "https://sheetdb.io/api/v1/2f7e6q2d2jlid";
+        // URL Atualizada para o Google Apps Script
+        const API_URL = "https://script.google.com/macros/s/AKfycbx3B5YDUe-_-uZmSeBU5RPGV0GgZ4g13VF9GJlS2B5Exn51gjhEDIytThTxLhXAl5F85A/exec";
 
         window.onload = function() {
             verificarUsuario();
@@ -162,138 +163,155 @@
             location.reload(); 
         }
 
-        // --- 1. Adicione esta função auxiliar dentro do seu <script> ---
         function formatarMoedaParaNumero(valorString) {
             if (!valorString) return 0;
-            // Remove R$, pontos de milhar, espaços e substitui vírgula por ponto
             let formatado = valorString.toString().replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.');
             return parseFloat(formatado) || 0;
         }
 
-        // --- 2. Atualize a sua função carregarDadosPlanilha ---
         async function carregarDadosPlanilha(userId) {
+            // 1. Tenta carregar do Cache primeiro (Carregamento Instantâneo)
+            const cacheLancamentos = localStorage.getItem(`cache_lancamentos_${userId}`);
+            const cacheLimites = localStorage.getItem(`cache_limites_${userId}`);
+
+            if (cacheLancamentos && cacheLimites) {
+                // Desenha a tela imediatamente com o que tem salvo
+                renderizarHome(JSON.parse(cacheLancamentos), JSON.parse(cacheLimites));
+            }
+
+            // 2. Busca na Planilha em Background (Atualização Silenciosa)
             try {
-                // Busca Lançamentos e Limites ao mesmo tempo
                 const [resLancamentos, resLimites] = await Promise.all([
-                    fetch(`${API_URL}/search?id_usuario=${userId}&sheet=lancamentos`),
-                    fetch(`${API_URL}/search?id_usuario=${userId}&sheet=limites`)
+                    fetch(`${API_URL}?sheet=lancamentos&id_usuario=${userId}`),
+                    fetch(`${API_URL}?sheet=limites&id_usuario=${userId}`)
                 ]);
                 
                 const lancamentos = await resLancamentos.json();
                 const limites = await resLimites.json();
 
-                // 1. Renderiza os Lançamentos Recentes
-                const containerLista = document.getElementById('lista-gastos');
-                let htmlLista = `<div class="section-title">Gastos Recentes <a href="#">Ver todos</a></div>`;
+                // 3. Salva os dados frescos no Cache para a próxima vez
+                localStorage.setItem(`cache_lancamentos_${userId}`, JSON.stringify(lancamentos));
+                localStorage.setItem(`cache_limites_${userId}`, JSON.stringify(limites));
 
-                if(lancamentos.length === 0 || lancamentos.error) {
-                    htmlLista += `<p style="text-align:center; color:#a0a0b0; padding:20px;">Nenhum dado na planilha ainda.</p>`;
-                } else {
-                    const recentes = [...lancamentos].reverse().slice(0, 5);
-                    recentes.forEach(l => {
-                        const valorLimpo = formatarMoedaParaNumero(l.valor);
-                        
-                        // Lógica de Cores e Sinais
-                        let classeCor = 'negative';
-                        let prefixo = '- R$ ';
-                        
-                        if (l.tipo_pagamento === 'receita') {
-                            classeCor = 'positive';
-                            prefixo = '+ R$ '; // Se preferir sem o +, basta deixar 'R$ '
-                        }
-
-                        htmlLista += `
-                        <div class="transaction-item">
-                            <div class="trans-left">
-                                <div class="trans-icon"><i class="fa-solid fa-money-bill"></i></div>
-                                <div class="trans-details">
-                                    <h4>${l.titulo}</h4>
-                                    <p>${l.tipo_pagamento} • ${l.data}</p>
-                                </div>
-                            </div>
-                            <div class="trans-amount ${classeCor}">${prefixo}${valorLimpo.toFixed(2)}</div>
-                        </div>`;
-                    });
-                }
-                containerLista.innerHTML = htmlLista;
-
-                // 2. Cálculos Globais (Saldo em Conta e Fatura do Cartão)
-                let saldo = 0;
-                let faturaCartao = 0;
-
-                if (!lancamentos.error) {
-                    lancamentos.forEach(l => { 
-                        const val = formatarMoedaParaNumero(l.valor);
-                        if (l.tipo_pagamento === 'receita') saldo += val;
-                        else if (l.tipo_pagamento === 'debito') saldo -= val;
-                        else if (l.tipo_pagamento === 'investimento') saldo -= val;
-                        else if (l.tipo_pagamento === 'credito') faturaCartao += val; // Soma a fatura
-                    });
-                }
-                document.querySelector('.balance-amount').innerText = `R$ ${saldo.toFixed(2)}`;
-
-                // 3. Renderiza as Barras Dinâmicas de Limites
-                const containerLimites = document.getElementById('container-limites');
-                let htmlLimites = '';
-
-                if(limites.length > 0 && !limites.error) {
-                    limites.forEach(limite => {
-                        let valorAtual = 0;
-                        
-                        // Decide o que essa barra está medindo
-                        if(limite.tipo_calculo === 'saldo') {
-                            valorAtual = saldo;
-                        } 
-                        else if (limite.tipo_calculo === 'fatura') {
-                            valorAtual = faturaCartao;
-                        } 
-                        else if (limite.tipo_calculo.startsWith('categoria_')) {
-                            // Extrai apenas o nome da categoria (ex: tira "categoria_" e sobra "mercado")
-                            const categoriaAlvo = limite.tipo_calculo.replace('categoria_', '');
-                            
-                            // Vasculha todos os lançamentos somando apenas os que batem com a categoria
-                            if (!lancamentos.error) {
-                                lancamentos.forEach(l => {
-                                    // Soma se for a categoria certa E se for um gasto (credito ou debito)
-                                    if (l.categoria === categoriaAlvo && (l.tipo_pagamento === 'credito' || l.tipo_pagamento === 'debito')) {
-                                        valorAtual += formatarMoedaParaNumero(l.valor);
-                                    }
-                                });
-                            }
-                        }
-
-                        let teto = formatarMoedaParaNumero(limite.valor_limite);
-                        let percentual = teto > 0 ? (valorAtual / teto) * 100 : 0;
-                        if(percentual > 100) percentual = 100; // Trava em 100% para o visual não quebrar
-                        if(percentual < 0) percentual = 0; // Se o saldo for negativo
-
-                        htmlLimites += `
-                        <div class="progress-card">
-                            <div class="progress-header">
-                                <div class="progress-title-group">
-                                    <div class="progress-icon" style="background-color: #252535; color: #fff;">
-                                        <i class="fa-solid ${limite.icone}"></i>
-                                    </div>
-                                    <div>
-                                        <div class="progress-title">${limite.titulo}</div>
-                                        <div class="progress-subtitle">${limite.subtitulo}</div>
-                                    </div>
-                                </div>
-                                <div class="progress-values">
-                                    <div class="current-value">R$ ${valorAtual.toFixed(2)}</div>
-                                    <div class="target-value">de R$ ${teto.toFixed(2)}</div>
-                                </div>
-                            </div>
-                            <div class="bar-bg"><div class="bar-fill" style="background: ${limite.cor_tema}; width: ${percentual}%;"></div></div>
-                        </div>`;
-                    });
-                }
-                
-                containerLimites.innerHTML = htmlLimites;
+                // 4. Atualiza a tela com os dados reais
+                renderizarHome(lancamentos, limites);
 
             } catch (error) {
-                console.error("Erro na API:", error);
+                console.error("Erro na API em background:", error);
+                // Só mostra erro se não houver cache nenhum para mostrar
+                if (!cacheLancamentos) {
+                    document.getElementById('lista-gastos').innerHTML = `<p style="text-align:center; color:#cf1d30; padding:20px;">Erro ao conectar. Verifique sua internet.</p>`;
+                }
             }
+        }
+
+        // Nova função criada para "desenhar" a tela baseada nos dados fornecidos
+        function renderizarHome(lancamentos, limites) {
+            const containerLista = document.getElementById('lista-gastos');
+            let htmlLista = `<div class="section-title">Gastos Recentes <a href="#">Ver todos</a></div>`;
+
+            if(lancamentos.length === 0 || lancamentos.error) {
+                htmlLista += `<p style="text-align:center; color:#a0a0b0; padding:20px;">Nenhum dado na planilha ainda.</p>`;
+            } else {
+                const recentes = [...lancamentos].reverse().slice(0, 5);
+                recentes.forEach(l => {
+                    const valorLimpo = formatarMoedaParaNumero(l.valor);
+                    
+                    let dataFormatada = l.data;
+                    if (dataFormatada && dataFormatada.includes('T')) {
+                        dataFormatada = dataFormatada.split('T')[0];
+                    }
+                    
+                    let classeCor = 'negative';
+                    let prefixo = '- R$ ';
+                    
+                    if (l.tipo_pagamento === 'receita') {
+                        classeCor = 'positive';
+                        prefixo = '+ R$ '; 
+                    }
+
+                    htmlLista += `
+                    <div class="transaction-item">
+                        <div class="trans-left">
+                            <div class="trans-icon"><i class="fa-solid fa-money-bill"></i></div>
+                            <div class="trans-details">
+                                <h4>${l.titulo}</h4>
+                                <p>${l.tipo_pagamento} • ${dataFormatada}</p>
+                            </div>
+                        </div>
+                        <div class="trans-amount ${classeCor}">${prefixo}${valorLimpo.toFixed(2)}</div>
+                    </div>`;
+                });
+            }
+            containerLista.innerHTML = htmlLista;
+
+            let saldo = 0;
+            let faturaCartao = 0;
+
+            if (!lancamentos.error) {
+                lancamentos.forEach(l => { 
+                    const val = formatarMoedaParaNumero(l.valor);
+                    if (l.tipo_pagamento === 'receita') saldo += val;
+                    else if (l.tipo_pagamento === 'debito') saldo -= val;
+                    else if (l.tipo_pagamento === 'investimento') saldo -= val;
+                    else if (l.tipo_pagamento === 'credito') faturaCartao += val; 
+                });
+            }
+            document.querySelector('.balance-amount').innerText = `R$ ${saldo.toFixed(2)}`;
+
+            const containerLimites = document.getElementById('container-limites');
+            let htmlLimites = '';
+
+            if(limites.length > 0 && !limites.error) {
+                limites.forEach(limite => {
+                    let valorAtual = 0;
+                    
+                    if(limite.tipo_calculo === 'saldo') {
+                        valorAtual = saldo;
+                    } 
+                    else if (limite.tipo_calculo === 'fatura') {
+                        valorAtual = faturaCartao;
+                    } 
+                    else if (limite.tipo_calculo.startsWith('categoria_')) {
+                        const categoriaAlvo = limite.tipo_calculo.replace('categoria_', '');
+                        
+                        if (!lancamentos.error) {
+                            lancamentos.forEach(l => {
+                                if (l.categoria === categoriaAlvo && (l.tipo_pagamento === 'credito' || l.tipo_pagamento === 'debito')) {
+                                    valorAtual += formatarMoedaParaNumero(l.valor);
+                                }
+                            });
+                        }
+                    }
+
+                    let teto = formatarMoedaParaNumero(limite.valor_limite);
+                    let percentual = teto > 0 ? (valorAtual / teto) * 100 : 0;
+                    if(percentual > 100) percentual = 100; 
+                    if(percentual < 0) percentual = 0; 
+
+                    htmlLimites += `
+                    <div class="progress-card">
+                        <div class="progress-header">
+                            <div class="progress-title-group">
+                                <div class="progress-icon" style="background-color: #252535; color: #fff;">
+                                    <i class="fa-solid ${limite.icone}"></i>
+                                </div>
+                                <div>
+                                    <div class="progress-title">${limite.titulo}</div>
+                                    <div class="progress-subtitle">${limite.subtitulo}</div>
+                                </div>
+                            </div>
+                            <div class="progress-values">
+                                <div class="current-value">R$ ${valorAtual.toFixed(2)}</div>
+                                <div class="target-value">de R$ ${teto.toFixed(2)}</div>
+                            </div>
+                        </div>
+                        <div class="bar-bg"><div class="bar-fill" style="background: ${limite.cor_tema}; width: ${percentual}%;"></div></div>
+                    </div>`;
+                });
+            }
+            
+            containerLimites.innerHTML = htmlLimites;
         }
     </script>
 </body>
