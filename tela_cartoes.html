@@ -78,8 +78,8 @@
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
         .payment-toggle { display: flex; gap: 10px; }
         .payment-toggle input[type="radio"] { display: none; }
-        /* AJUSTE UX 1: font-weight 600 na classe base para não redimensionar quando ativo */
-        .toggle-btn-modal { flex: 1; text-align: center; padding: 10px; background-color: #12121c; border: 1px solid #252535; border-radius: 12px; cursor: pointer; font-size: 0.75rem; color: #a0a0b0; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 4px; font-weight: 600; }
+        .toggle-btn-modal { flex: 1; text-align: center; padding: 12px 5px; background-color: #12121c; border: 1px solid #252535; border-radius: 12px; cursor: pointer; font-size: 0.75rem; color: #a0a0b0; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 600; }
+        .toggle-btn-modal i { font-size: 1.2rem; margin-bottom: 6px; }
         .payment-toggle input[type="radio"]:checked + .toggle-btn-modal { background-color: #251e3e; border-color: #b070f0; color: #ffffff; }
         .btn-primary { width: 100%; background: linear-gradient(90deg, #5c2b99, #b070f0); color: #ffffff; border: none; border-radius: 12px; padding: 16px; font-size: 1rem; font-weight: 600; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(92, 43, 153, 0.4); }
     </style>
@@ -122,7 +122,6 @@
         </nav>
     </div>
 
-    <!-- Modal Novo Cartão -->
     <div id="newCardModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -173,7 +172,6 @@
         </div>
     </div>
 
-    <!-- Modal Novo Lançamento -->
     <div id="expenseModal" class="modal-overlay">
         <div class="modal-content">
             <div class="modal-header">
@@ -184,15 +182,32 @@
             <form id="expenseForm">
                 <div class="form-group">
                     <label>Tipo de Lançamento</label>
-                    <div class="payment-toggle" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <div class="payment-toggle" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                        
+                        <input type="radio" id="pay-income" name="paymentType" value="receita">
+                        <label for="pay-income" class="toggle-btn-modal" style="border-color: #2ed57340;">
+                            <i class="fa-solid fa-money-bills" style="color: #2ed573;"></i>
+                            <span style="color: #2ed573;">Receita</span>
+                        </label>
+
                         <input type="radio" id="pay-credit" name="paymentType" value="credito" checked>
-                        <label for="pay-credit" class="toggle-btn-modal"><i class="fa-regular fa-credit-card" style="font-size: 1.1rem;"></i> Crédito</label>
+                        <label for="pay-credit" class="toggle-btn-modal">
+                            <i class="fa-regular fa-credit-card"></i>
+                            <span>Crédito</span>
+                        </label>
                         
                         <input type="radio" id="pay-debit" name="paymentType" value="debito">
-                        <label for="pay-debit" class="toggle-btn-modal"><i class="fa-solid fa-money-bill-transfer" style="font-size: 1.1rem;"></i> Débito/Pix</label>
+                        <label for="pay-debit" class="toggle-btn-modal">
+                            <i class="fa-solid fa-money-bill-transfer"></i>
+                            <span>Débito/Pix</span>
+                        </label>
                         
                         <input type="radio" id="pay-invest" name="paymentType" value="investimento">
-                        <label for="pay-invest" class="toggle-btn-modal"><i class="fa-solid fa-arrow-trend-up" style="font-size: 1.1rem;"></i> Investir</label>
+                        <label for="pay-invest" class="toggle-btn-modal">
+                            <i class="fa-solid fa-arrow-trend-up"></i>
+                            <span>Investir</span>
+                        </label>
+                        
                     </div>
                 </div>
 
@@ -200,7 +215,6 @@
                     <label>Cartão Utilizado</label>
                     <select class="form-control" id="cartaoUtilizadoSelect" required>
                         <option value="" disabled selected>Selecione um cartão</option>
-                        <!-- Preenchido via Javascript -->
                     </select>
                 </div>
 
@@ -208,7 +222,6 @@
                     <label>Título / Estabelecimento</label>
                     <input type="text" id="tituloInput" class="form-control" placeholder="Ex: Supermercado Extra" required>
                 </div>
-                <!-- AJUSTE UX 2: type="text" inputmode="numeric" -->
                 <div class="form-group">
                     <label>Valor (R$)</label>
                     <input type="text" inputmode="numeric" id="valorInput" class="form-control" placeholder="0,00" required>
@@ -232,7 +245,6 @@
                     <label>Categoria</label>
                     <select class="form-control" id="categorySelect" required>
                         <option value="" disabled selected>Selecione uma categoria</option>
-                        <!-- Preenchido via Javascript -->
                     </select>
                 </div>
 
@@ -241,7 +253,6 @@
         </div>
     </div>
 
-    <!-- Script de Autenticação Rápida -->
     <div id="loginModal" class="modal-overlay" style="align-items: center; background-color: #12121c; z-index: 9999;">
         <div class="modal-content" style="border-radius: 25px; transform: none; animation: none;">
             <div style="text-align: center; margin-bottom: 20px;">
@@ -263,12 +274,14 @@
     </div>
 
     <script>
-        const API_URL = "https://sheetdb.io/api/v1/2f7e6q2d2jlid";
+        // URL da API atualizada para o Apps Script
+        const API_URL = "https://script.google.com/macros/s/AKfycbx3B5YDUe-_-uZmSeBU5RPGV0GgZ4g13VF9GJlS2B5Exn51gjhEDIytThTxLhXAl5F85A/exec";
         
         let globalGastos = [];
         let globalCartoes = [];
         let cartaoFocoAtualId = null;
         let timeoutScroll;
+        let isFirstRender = true;
 
         window.onload = function() {
             verificarLogin();
@@ -282,7 +295,6 @@
             }
         };
 
-        // --- SISTEMA DE LOGIN IN-APP ---
         function verificarLogin() {
             const savedId = localStorage.getItem('appFinanceiro_userId');
             const savedName = localStorage.getItem('appFinanceiro_userName');
@@ -325,101 +337,132 @@
             return parseFloat(formatado) || 0;
         }
 
-        // --- MÁGICA DA MÁSCARA DE MOEDA ---
         document.getElementById('valorInput').addEventListener('input', function (e) {
-            let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não for dígito numérico
+            let value = e.target.value.replace(/\D/g, '');
             if (!value) {
                 e.target.value = '';
                 return;
             }
-            // Transforma "5" em "0.05", "50" em "0.50", "500" em "5.00"
             value = (parseInt(value, 10) / 100).toFixed(2);
-            // Formata para o padrão brasileiro: converte o ponto decimal para vírgula
             value = value.replace('.', ',');
-            // Adiciona o ponto separador de milhar
             value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
             e.target.value = value;
         });
 
+        // Atualizado para o formato GET do Apps Script
         async function carregarCartoesDinamicamente(userId) {
+            // 1. Tenta carregar do Cache primeiro
+            const cacheCartoes = localStorage.getItem(`cache_cartoes_${userId}`);
+            const cacheLancamentos = localStorage.getItem(`cache_lancamentos_${userId}`);
+
+            if (cacheCartoes && cacheLancamentos) {
+                renderizarCartoes(JSON.parse(cacheCartoes), JSON.parse(cacheLancamentos));
+            }
+
+            // 2. Busca na Planilha em Background
             try {
                 const [resCartoes, resGastos] = await Promise.all([
-                    fetch(`${API_URL}/search?id_usuario=${userId}&sheet=cartoes`),
-                    fetch(`${API_URL}/search?id_usuario=${userId}&sheet=lancamentos`)
+                    fetch(`${API_URL}?sheet=cartoes&id_usuario=${userId}`),
+                    fetch(`${API_URL}?sheet=lancamentos&id_usuario=${userId}`)
                 ]);
                 
-                globalCartoes = await resCartoes.json();
-                globalGastos = (await resGastos.json());
-                
-                if (globalCartoes.error) globalCartoes = [];
-                if (globalGastos.error) globalGastos = [];
-                
-                const slider = document.getElementById('cardSlider');
-                const addBtnWrapper = document.getElementById('addCardBtnWrapper');
-                const spacer = document.getElementById('cardSpacer');
-                const cartaoSelect = document.getElementById('cartaoUtilizadoSelect'); 
-                
-                slider.innerHTML = ''; 
-                cartaoSelect.innerHTML = '<option value="" disabled selected>Selecione um cartão</option>';
+                const cartoes = await resCartoes.json();
+                const todosGastos = await resGastos.json();
 
-                if(globalCartoes.length > 0) {
-                    globalCartoes.forEach(c => {
-                        cartaoSelect.innerHTML += `<option value="${c.id_cartao}">${c.nome_banco} (Final ${c.final_cartao})</option>`;
+                // 3. Salva no cache
+                localStorage.setItem(`cache_cartoes_${userId}`, JSON.stringify(cartoes));
+                localStorage.setItem(`cache_lancamentos_${userId}`, JSON.stringify(todosGastos));
+                
+                // 4. Renderiza com dados novos
+                renderizarCartoes(cartoes, todosGastos);
+            } catch (e) {
+                console.error("Erro ao carregar cartões:", e);
+            }
+        }
 
-                        const icone = c.tipo.includes("Crédito") ? '<i class="fa-brands fa-cc-mastercard" style="font-size: 2rem; opacity: 0.8;"></i>' : '<div style="width: 40px; height: 30px; background: linear-gradient(135deg, #e0e0e0, #999); border-radius: 5px;"></div>';
+        function renderizarCartoes(cartoes, todosGastos) {
+            globalCartoes = cartoes.error ? [] : cartoes;
+            globalGastos = todosGastos.error ? [] : todosGastos;
+            
+            const cartaoSelect = document.getElementById('cartaoUtilizadoSelect');
+            cartaoSelect.innerHTML = '<option value="" disabled selected>Selecione um cartão</option>';
+            globalCartoes.forEach(c => {
+                cartaoSelect.innerHTML += `<option value="${c.id_cartao}">${c.nome_banco}</option>`;
+            });
+            
+            const slider = document.getElementById('cardSlider');
+            const addBtnWrapper = document.getElementById('addCardBtnWrapper');
+            const spacer = document.getElementById('cardSpacer');
+            
+            slider.innerHTML = ''; 
+
+            if(!cartoes.error && cartoes.length > 0) {
+                cartoes.forEach(c => {
+                    const icone = c.tipo.includes("Crédito") ? '<i class="fa-brands fa-cc-mastercard" style="font-size: 2rem; opacity: 0.8;"></i>' : '<div style="width: 40px; height: 30px; background: linear-gradient(135deg, #e0e0e0, #999); border-radius: 5px;"></div>';
+                    
+                    let labelDestaque = "Saldo Disponível";
+                    let saldoInicial = formatarMoedaParaNumero(c.valor);
+                    let valorDestaque = saldoInicial;
+                    let subValorHTML = "";
+                    let infoInferior = `Final ${c.final_cartao}`; 
+
+                    let totalGastoNesteCartao = 0;
+                    if (!todosGastos.error) {
+                        todosGastos.forEach(g => {
+                            // A CORREÇÃO ESTÁ AQUI: Envolvendo os dois IDs em String()
+                            if(String(g.id_cartao) === String(c.id_cartao)) {
+                                totalGastoNesteCartao += formatarMoedaParaNumero(g.valor);
+                            }
+                        });
+                    }
+
+                    if (c.tipo.includes("Crédito")) {
+                        labelDestaque = "Fatura Atual";
+                        valorDestaque = totalGastoNesteCartao;
                         
-                        let labelDestaque = "Saldo Disponível";
-                        let valorDestaque = formatarMoedaParaNumero(c.valor);
-                        let subValorHTML = "";
-                        let infoInferior = `Final ${c.final_cartao}`; 
+                        let limiteTotal = saldoInicial; 
+                        subValorHTML = `<div class="card-limit">Limite: R$ ${limiteTotal.toFixed(2)}</div>`;
+                        
+                        let percentual = limiteTotal > 0 ? (totalGastoNesteCartao / limiteTotal) * 100 : 0;
+                        infoInferior = `${percentual.toFixed(1)}% do Limite`;
+                        
+                    } else {
+                        valorDestaque = saldoInicial - totalGastoNesteCartao;
+                    }
 
-                        if (c.tipo.includes("Crédito")) {
-                            labelDestaque = "Fatura Atual";
-                            let totalFatura = 0;
-                            
-                            globalGastos.forEach(g => {
-                                if(g.id_cartao === c.id_cartao && g.tipo_pagamento === "credito") {
-                                    totalFatura += formatarMoedaParaNumero(g.valor);
-                                }
-                            });
-                            
-                            valorDestaque = totalFatura;
-                            let limiteTotal = formatarMoedaParaNumero(c.valor);
-                            subValorHTML = `<div class="card-limit">Limite: R$ ${limiteTotal.toFixed(2)}</div>`;
-                            
-                            let percentual = limiteTotal > 0 ? (totalFatura / limiteTotal) * 100 : 0;
-                            infoInferior = `${percentual.toFixed(1)}% do Limite`;
-                        }
-
-                        const htmlCartao = `
-                        <div class="card-wrapper" data-id-cartao="${c.id_cartao}" data-nome-banco="${c.nome_banco}">
-                            <div class="credit-card ${c.tema}">
-                                <div class="card-top">
-                                    <span class="bank-name">${c.nome_banco}</span>
-                                    ${icone}
-                                </div>
-                                <div class="card-middle">
-                                    <div class="card-balance-label">${labelDestaque}</div>
-                                    <div class="card-balance">R$ ${valorDestaque.toFixed(2)}</div>
-                                    ${subValorHTML}
-                                </div>
-                                <div class="card-bottom">
-                                    <div class="card-info-inferior">${infoInferior}</div>
-                                    <div class="card-network">${c.tipo}</div>
-                                </div>
+                    const htmlCartao = `
+                    <div class="card-wrapper" data-id-cartao="${c.id_cartao}" data-nome-banco="${c.nome_banco}">
+                        <div class="credit-card ${c.tema}">
+                            <div class="card-top">
+                                <span class="bank-name">${c.nome_banco}</span>
+                                ${icone}
                             </div>
-                        </div>`;
-                        
-                        slider.insertAdjacentHTML('beforeend', htmlCartao);
-                    });
-                }
-                
-                slider.appendChild(addBtnWrapper);
-                slider.appendChild(spacer);
-                
-                detectarCartaoCentral();
+                            <div class="card-middle">
+                                <div class="card-balance-label">${labelDestaque}</div>
+                                <div class="card-balance">R$ ${valorDestaque.toFixed(2)}</div>
+                                ${subValorHTML}
+                            </div>
+                            <div class="card-bottom">
+                                <div class="card-info-inferior">${infoInferior}</div>
+                                <div class="card-network">${c.tipo}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                    
+                    slider.insertAdjacentHTML('beforeend', htmlCartao);
+                });
+            }
+            
+            slider.appendChild(addBtnWrapper);
+            slider.appendChild(spacer);
 
-            } catch (e) { console.error("Erro ao carregar cartões:", e); }
+            // Mantém a rolagem no primeiro cartão no carregamento inicial
+            if (typeof isFirstRender !== 'undefined' && isFirstRender) {
+                slider.scrollLeft = 0;
+                isFirstRender = false;
+            }
+
+            detectarCartaoCentral();
         }
 
         function detectarCartaoCentral() {
@@ -462,7 +505,8 @@
             document.getElementById('nomeCartaoFoco').innerText = nomeBanco;
             const container = document.getElementById('lista-lancamentos-cartao');
             
-            const gastosFiltrados = globalGastos.filter(g => g.id_cartao === idCartao);
+            // Mantendo a correção anterior do String() para evitar o erro do filtro
+            const gastosFiltrados = globalGastos.filter(g => String(g.id_cartao) === String(idCartao));
 
             if(gastosFiltrados.length === 0) {
                 container.innerHTML = '<p style="text-align:center; color:#a0a0b0;">Nenhuma transação neste cartão.</p>';
@@ -472,13 +516,20 @@
             let html = '';
             [...gastosFiltrados].reverse().forEach(l => {
                 const valorLimpo = formatarMoedaParaNumero(l.valor);
+                
+                // NOVO: Limpeza do formato da data
+                let dataFormatada = l.data;
+                if (dataFormatada && dataFormatada.includes("T")) {
+                    dataFormatada = dataFormatada.split("T")[0]; // Apanha apenas o lado esquerdo do "T"
+                }
+
                 html += `
                 <div class="transaction-item">
                     <div class="trans-left">
                         <div class="trans-icon"><i class="fa-solid fa-tag"></i></div>
                         <div class="trans-details">
                             <h4>${l.titulo}</h4>
-                            <p>${l.categoria} • ${l.data}</p>
+                            <p>${l.categoria} • ${dataFormatada}</p> 
                         </div>
                     </div>
                     <div class="trans-amount">-R$ ${valorLimpo.toFixed(2)}</div>
@@ -487,10 +538,10 @@
             container.innerHTML = html;
         }
 
-        // --- Modais e Salvar ---
         function openNewCardModal() { document.getElementById('newCardModal').style.display = 'flex'; }
         function closeNewCardModal() { document.getElementById('newCardModal').style.display = 'none'; document.getElementById('newCardForm').reset(); }
 
+        // Atualizado para o formato POST do Apps Script
         async function saveNewCard() {
             const userId = localStorage.getItem('appFinanceiro_userId');
             const banco = document.getElementById('bancoInput').value;
@@ -515,16 +566,21 @@
             };
 
             try {
-                await fetch(`${API_URL}?sheet=cartoes`, {
+                await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [payload] })
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sheet: "cartoes",
+                        action: "create",
+                        ...payload
+                    })
                 });
 
-                alert("Cartão adicionado com sucesso!");
                 closeNewCardModal();
                 btn.innerText = "Adicionar à Carteira"; btn.style.opacity = "1";
-                carregarCartoesDinamicamente(userId);
+                // Tempo para a planilha computar
+                setTimeout(() => carregarCartoesDinamicamente(userId), 1500);
             } catch (error) {
                 alert("Erro ao salvar! Tente novamente.");
                 btn.innerText = "Adicionar à Carteira";
@@ -546,6 +602,7 @@
         }
         function closeExpenseModal() { document.getElementById('expenseModal').style.display = 'none'; document.getElementById('expenseForm').reset(); }
 
+        // Atualizado para o formato POST do Apps Script
         async function saveExpense() {
             const userId = localStorage.getItem('appFinanceiro_userId');
             const tipo = document.querySelector('input[name="paymentType"]:checked').value;
@@ -571,7 +628,7 @@
                 id_cartao: idCartaoSelecionado,
                 tipo_pagamento: tipo,
                 titulo: titulo,
-                valor: valorNumerico, // Salva o valor numérico (ex: 5.00) que o sistema entende melhor
+                valor: valorNumerico, 
                 data: data,
                 parcelas: parcelas,
                 categoria: categoria,
@@ -579,11 +636,36 @@
                 id_projeto: ""
             };
 
+            // ---- A MÁGICA: ATUALIZAÇÃO OTIMISTA ----
+            // 1. Injeta o novo gasto diretamente na memória visual do app
+            globalGastos.push(payloadLancamento);
+            
+            // 2. Salva no cache imediatamente para não perder ao recarregar a tela
+            localStorage.setItem(`cache_lancamentos_${userId}`, JSON.stringify(globalGastos));
+            
+            // 3. Salva a posição atual da rolagem (para a tela não pular para a esquerda)
+            const slider = document.getElementById('cardSlider');
+            const scrollAtual = slider.scrollLeft;
+
+            // 4. Re-desenha a tela instantaneamente com os novos saldos e transações
+            cartaoFocoAtualId = null; 
+            renderizarCartoes(globalCartoes, globalGastos);
+            
+            // Devolve o carrossel exatamente onde estava
+            setTimeout(() => { document.getElementById('cardSlider').scrollLeft = scrollAtual; }, 10);
+            // ----------------------------------------
+
             try {
-                await fetch(`${API_URL}?sheet=lancamentos`, { 
+                // O envio para a planilha acontece silenciosamente em background
+                await fetch(API_URL, { 
                     method: 'POST', 
-                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, 
-                    body: JSON.stringify({ data: [payloadLancamento] }) 
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({
+                        sheet: "lancamentos",
+                        action: "create",
+                        ...payloadLancamento
+                    }) 
                 });
 
                 if (tipo === 'investimento') {
@@ -593,10 +675,15 @@
                         tipo: categoria,  
                         valor_total_investido: valorNumerico
                     };
-                    await fetch(`${API_URL}?sheet=investimentos_carteira`, { 
+                    await fetch(API_URL, { 
                         method: 'POST', 
-                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ data: [payloadInvestimento] }) 
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({
+                            sheet: "investimentos_carteira",
+                            action: "create",
+                            ...payloadInvestimento
+                        }) 
                     });
                 }
 
@@ -605,23 +692,21 @@
                 btn.innerText = "Adicionar Gasto"; 
                 btn.style.opacity = "1";
                 
-                cartaoFocoAtualId = null; 
-                carregarCartoesDinamicamente(userId); 
-                
             } catch (error) { 
-                alert("Erro ao salvar. Tente novamente."); 
+                alert("Erro ao salvar na planilha. Tente novamente."); 
                 btn.innerText = "Adicionar Gasto"; 
                 btn.style.opacity = "1";
             }
         }
 
-        // --- LÓGICA MÁGICA DA UX ---
         function atualizarInterfaceUX() {
             const tipoPagamento = document.querySelector('input[name="paymentType"]:checked').value;
             const idCartao = document.getElementById('cartaoUtilizadoSelect').value;
             
-            const cartao = globalCartoes.find(c => c.id_cartao === idCartao);
-            const isVale = cartao && cartao.tipo === "Vale Refeição";
+            // A CORREÇÃO ESTÁ AQUI: Envolvendo as variáveis em String()
+            const cartao = globalCartoes.find(c => String(c.id_cartao) === String(idCartao));
+            
+            const isVale = cartao && (cartao.tipo === "Vale Refeição" || cartao.nome_banco.toLowerCase().includes('alelo'));
 
             const group = document.getElementById('installmentsGroup');
             const selectCategoria = document.getElementById('categorySelect');
@@ -662,7 +747,8 @@
                 selectCategoria.innerHTML += `
                     <option value="mercado">Mercado</option>
                     <option value="padaria">Padaria</option>
-                    <option value="restaurante">Restaurante</option>
+                    <option value="almoco">Almoço</option>
+                    <option value="jantar">Jantar</option>
                     <option value="lanchonete">Lanchonete</option>
                     <option value="outro">Outro</option>
                 `;
@@ -687,10 +773,13 @@
         });
 
         document.getElementById('cartaoUtilizadoSelect').addEventListener('change', (e) => {
-            const cartao = globalCartoes.find(c => c.id_cartao === e.target.value);
+            // A CORREÇÃO ESTÁ AQUI: Envolvendo as variáveis em String()
+            const cartao = globalCartoes.find(c => String(c.id_cartao) === String(e.target.value));
             
             if (cartao) {
-                if (cartao.tipo === "Vale Refeição") {
+                const isAlelo = cartao.nome_banco.toLowerCase().includes('alelo');
+                
+                if (cartao.tipo === "Vale Refeição" || isAlelo) {
                     document.getElementById('pay-debit').checked = true;
                 } else if (cartao.tipo === "Cartão de Crédito") {
                     document.getElementById('pay-credit').checked = true;
