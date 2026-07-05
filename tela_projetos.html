@@ -113,7 +113,7 @@
         </header>
 
         <div id="projects-list-view" class="projects-list">
-            <p style="text-align:center; color:#a0a0b0; padding-top: 30px;">Conectando à planilha...</p>
+            <p style="text-align:center; color:#a0a0b0; padding-top: 30px;">A conectar à planilha...</p>
         </div>
 
         <div id="project-detail-view">
@@ -150,7 +150,6 @@
             <a href="tela_cartoes.html" class="nav-item"><i class="fa-regular fa-credit-card"></i><span>Cartões</span></a>
             <a href="tela_projetos.html" class="nav-item active"><i class="fa-solid fa-suitcase-rolling"></i><span>Projetos</span></a>
             <a href="tela_investimentos.html" class="nav-item"><i class="fa-solid fa-chart-pie"></i><span>Investir</span></a>
-            <a href="#" class="nav-item"><i class="fa-solid fa-gear"></i><span>Ajustes</span></a>
             <a href="tela_ajustes.html" class="nav-item"><i class="fa-solid fa-gear"></i><span>Ajustes</span></a>
         </nav>
     </div>
@@ -201,7 +200,7 @@
             </div>
             
             <div class="expenses-list-scroll">
-                <p style="text-align:center; color:#a0a0b0; padding-top: 20px;">Carregando gastos disponíveis...</p>
+                <p style="text-align:center; color:#a0a0b0; padding-top: 20px;">A carregar gastos disponíveis...</p>
             </div>
 
             <button class="btn-primary" onclick="saveLinks()">Adicionar Selecionados</button>
@@ -209,71 +208,84 @@
     </div>
 
     <script>
-        const API_URL = "https://sheetdb.io/api/v1/2f7e6q2d2jlid";
+        // URL da API atualizada para o Google Apps Script
+        const API_URL = "https://script.google.com/macros/s/AKfycbx3B5YDUe-_-uZmSeBU5RPGV0GgZ4g13VF9GJlS2B5Exn51gjhEDIytThTxLhXAl5F85A/exec";
 
         window.onload = function() {
             const userId = localStorage.getItem('appFinanceiro_userId');
-            if(!userId) window.location.href = 'index.html'; // Proteção de rota
+            if(!userId) window.location.href = 'index.html'; 
             carregarProjetos(userId);
         };
 
-        // --- 1. LER PROJETOS DA PLANILHA ---
+        // --- 1. LER PROJETOS DA PLANILHA (GET) ---
         async function carregarProjetos(userId) {
             const listContainer = document.getElementById('projects-list-view');
             if (!listContainer) return;
 
+            const cacheProjetos = localStorage.getItem(`cache_projetos_${userId}`);
+            if (cacheProjetos) {
+                renderizarProjetos(JSON.parse(cacheProjetos));
+            }
+
             try {
-                const res = await fetch(`${API_URL}/search?id_usuario=${userId}&sheet=projetos`);
+                const res = await fetch(`${API_URL}?sheet=projetos&id_usuario=${userId}`);
                 const projetos = await res.json();
                 
-                // Se a planilha estiver vazia, renderiza o Estado Vazio (Empty State)
-                if(projetos.length === 0 || projetos.error) {
-                    listContainer.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fa-solid fa-suitcase-rolling"></i>
-                            <h3>Nenhum projeto ainda</h3>
-                            <p>Crie sua primeira viagem, reforma ou evento para organizar os seus gastos agrupados.</p>
-                            <button class="btn-primary" style="width: auto; padding: 12px 25px; margin-top: 10px;" onclick="openNewProjectModal()">
-                                <i class="fa-solid fa-plus"></i> Criar Primeiro Projeto
-                            </button>
-                        </div>
-                    `;
-                    return;
-                }
-
-                // Se tiver projetos, desenha os cartões
-                let html = '';
-                projetos.forEach((p, index) => {
-                    // Alterna as cores da borda esquerda só para ficar bonito visualmente
-                    const coresBorda = ["#b070f0", "#32BCAD", "#F2C14E", "#cf1d30"];
-                    const cor = coresBorda[index % coresBorda.length];
-                    
-                    html += `
-                    <div class="project-card" style="border-left-color: ${cor};" onclick="showProjectDetail('${p.nome}')">
-                        <div class="project-header">
-                            <div class="project-icon" style="background-color: transparent; border: 1px solid ${cor}; color: ${cor};">
-                                <i class="fa-solid ${p.icone || 'fa-folder-open'}"></i>
-                            </div>
-                            <div class="project-total">
-                                <span>Status</span>
-                                Ativo
-                            </div>
-                        </div>
-                        <div class="project-info">
-                            <h3>${p.nome}</h3>
-                            <p>${p.descricao}</p>
-                        </div>
-                    </div>`;
-                });
-                listContainer.innerHTML = html;
+                localStorage.setItem(`cache_projetos_${userId}`, JSON.stringify(projetos));
+                renderizarProjetos(projetos);
 
             } catch (e) { 
                 console.error(e); 
-                listContainer.innerHTML = '<p style="text-align:center; color:#ff4757; padding-top: 30px;">Erro de conexão com a base de dados.</p>';
+                if (!cacheProjetos) {
+                    listContainer.innerHTML = '<p style="text-align:center; color:#ff4757; padding-top: 30px;">Erro de ligação com a base de dados.</p>';
+                }
             }
         }
 
-        // --- 2. SALVAR NOVO PROJETO ---
+        function renderizarProjetos(projetos) {
+            const listContainer = document.getElementById('projects-list-view');
+            if (!listContainer) return;
+
+            if(projetos.length === 0 || projetos.error) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-suitcase-rolling"></i>
+                        <h3>Nenhum projeto ainda</h3>
+                        <p>Crie a sua primeira viagem, reforma ou evento para organizar os seus gastos agrupados.</p>
+                        <button class="btn-primary" style="width: auto; padding: 12px 25px; margin-top: 10px;" onclick="openNewProjectModal()">
+                            <i class="fa-solid fa-plus"></i> Criar Primeiro Projeto
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            projetos.forEach((p, index) => {
+                const coresBorda = ["#b070f0", "#32BCAD", "#F2C14E", "#cf1d30"];
+                const cor = coresBorda[index % coresBorda.length];
+                
+                html += `
+                <div class="project-card" style="border-left-color: ${cor};" onclick="showProjectDetail('${p.nome}')">
+                    <div class="project-header">
+                        <div class="project-icon" style="background-color: transparent; border: 1px solid ${cor}; color: ${cor};">
+                            <i class="fa-solid ${p.icone || 'fa-folder-open'}"></i>
+                        </div>
+                        <div class="project-total">
+                            <span>Status</span>
+                            Ativo
+                        </div>
+                    </div>
+                    <div class="project-info">
+                        <h3>${p.nome}</h3>
+                        <p>${p.descricao}</p>
+                    </div>
+                </div>`;
+            });
+            listContainer.innerHTML = html;
+        }
+
+        // --- 2. SALVAR NOVO PROJETO (POST) ---
         async function saveNewProject() {
             const userId = localStorage.getItem('appFinanceiro_userId');
             const nome = document.getElementById('nomeProjetoInput').value;
@@ -283,7 +295,7 @@
             if(!nome || !descricao) return alert("Por favor, preencha o nome e a descrição!");
 
             const btn = document.getElementById('btnSaveProject');
-            btn.innerText = "Salvando..."; btn.style.opacity = "0.7";
+            btn.innerText = "A guardar..."; btn.style.opacity = "0.7";
 
             const payload = {
                 id_projeto: "proj_" + Date.now().toString(),
@@ -294,18 +306,26 @@
             };
 
             try {
-                await fetch(`${API_URL}?sheet=projetos`, {
+                // Adaptado para o formato POST do Google Apps Script
+                await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [payload] })
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sheet: "projetos",
+                        action: "create",
+                        ...payload
+                    })
                 });
 
                 alert('Projeto criado com sucesso!');
                 closeNewProjectModal();
                 btn.innerText = "Criar Projeto"; btn.style.opacity = "1";
-                carregarProjetos(userId); // Recarrega a tela apagando o "Empty State"
+                
+                // Tempo para a planilha processar a nova linha antes de recarregar
+                setTimeout(() => carregarProjetos(userId), 1500); 
             } catch(e) {
-                alert("Erro ao salvar projeto. Tente novamente.");
+                alert("Erro ao guardar projeto. Tente novamente.");
                 btn.innerText = "Criar Projeto"; btn.style.opacity = "1";
             }
         }
@@ -317,7 +337,6 @@
         const btnAdd = document.getElementById('btn-add');
         const pageTitle = document.getElementById('page-title');
 
-        // Simula a entrada nos detalhes de um projeto
         function showProjectDetail(nomeProjeto) {
             listView.style.display = 'none';
             detailView.style.display = 'flex';
