@@ -10,14 +10,42 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background-color: #12121c; color: #ffffff; display: flex; justify-content: center; }
         .mobile-container { width: 100%; max-width: 414px; background-color: #161622; min-height: 100vh; position: relative; display: flex; flex-direction: column; padding-bottom: 90px; }
-        header { padding: 30px 25px 20px; display: flex; align-items: center; gap: 15px; }
+        
+        header { padding: 30px 25px 20px; display: flex; align-items: center; justify-content: space-between; }
+        .header-left { display: flex; align-items: center; gap: 15px; }
         .header-btn { background: none; border: none; color: #ffffff; font-size: 1.2rem; cursor: pointer; }
         .header-title { font-size: 1.2rem; font-weight: 600; }
-        .content { padding: 0 25px; }
+        
+        .content { padding: 0 25px; flex: 1; overflow-y: auto; }
+        
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-small { background: rgba(176, 112, 240, 0.2); color: #b070f0; border: none; padding: 8px 12px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+        .btn-small:active { transform: scale(0.95); }
+
+        /* Lista de Limites */
+        .limit-list { display: flex; flex-direction: column; gap: 15px; }
+        .limit-item { background-color: #1b1b28; border-radius: 16px; padding: 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; border: 1px solid #252535; transition: border-color 0.3s; }
+        .limit-item:hover { border-color: #b070f0; }
+        .limit-left { display: flex; align-items: center; gap: 15px; }
+        .limit-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; color: #ffffff; }
+        .limit-info h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+        .limit-info p { font-size: 0.75rem; color: #a0a0b0; }
+        .badge-ativo { background: rgba(46, 213, 115, 0.15); color: #2ed573; padding: 5px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 600; }
+        .badge-inativo { background: rgba(207, 29, 48, 0.15); color: #cf1d30; padding: 5px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 600; }
+
+        /* Modais */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 100; justify-content: center; align-items: flex-end; }
+        .modal-content { background-color: #1b1b28; width: 100%; max-width: 414px; border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 30px 25px; animation: slideUp 0.3s ease; max-height: 90vh; overflow-y: auto; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .modal-header h3 { font-size: 1.2rem; font-weight: 600; }
+        .close-btn { background: none; border: none; color: #a0a0b0; font-size: 1.5rem; cursor: pointer; }
         
         .form-group { margin-bottom: 18px; }
         .form-group label { display: block; font-size: 0.85rem; color: #a0a0b0; margin-bottom: 8px; }
         .form-control { width: 100%; background-color: #12121c; color: #ffffff; border: 1px solid #252535; border-radius: 12px; padding: 14px 15px; font-size: 1rem; outline: none; }
+        .form-control:focus { border-color: #b070f0; }
+        
         .btn-primary { width: 100%; background: linear-gradient(90deg, #5c2b99, #b070f0); color: #ffffff; border: none; border-radius: 12px; padding: 16px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px; }
         
         .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 414px; background-color: #161622; display: flex; justify-content: space-around; padding: 20px 0 25px; border-top: 1px solid #252535; }
@@ -29,62 +57,21 @@
 <body>
     <div class="mobile-container">
         <header>
-            <button class="header-btn" onclick="window.location.href='index.html'"><i class="fa-solid fa-chevron-left"></i></button>
-            <h1 class="header-title">Configurar Limites</h1>
+            <div class="header-left">
+                <button class="header-btn" onclick="window.location.href='index.html'"><i class="fa-solid fa-chevron-left"></i></button>
+                <h1 class="header-title">Configurar Limites</h1>
+            </div>
         </header>
 
         <div class="content">
-            <p style="color: #a0a0b0; font-size: 0.9rem; margin-bottom: 25px;">Adicione os indicadores (barras de progresso) que aparecerão na sua tela inicial.</p>
+            <div class="section-header">
+                <p style="color: #a0a0b0; font-size: 0.9rem; max-width: 60%;">Gerencie os indicadores da sua tela inicial.</p>
+                <button class="btn-small" onclick="abrirModalNovo()"><i class="fa-solid fa-plus"></i> Novo Limite</button>
+            </div>
             
-            <form id="limiteForm">
-                <div class="form-group">
-                    <label>Título (Ex: Caixa Atual, Cartão)</label>
-                    <input type="text" id="tituloInput" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>Subtítulo (Ex: Livre para gastar)</label>
-                    <input type="text" id="subtituloInput" class="form-control" required>
-                </div>
-                <div style="display: flex; gap: 15px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label>Ícone</label>
-                        <select id="iconeInput" class="form-control">
-                            <option value="fa-wallet">Carteira</option>
-                            <option value="fa-credit-card">Cartão</option>
-                            <option value="fa-piggy-bank">Porquinho</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label>Cor da Barra</label>
-                        <select id="corInput" class="form-control">
-                            <option value="linear-gradient(90deg, #5c2b99, #b070f0)">Roxa</option>
-                            <option value="linear-gradient(90deg, #cf1d30, #ff4757)">Vermelha</option>
-                            <option value="linear-gradient(90deg, #1e40af, #3b82f6)">Azul</option>
-                            <option value="linear-gradient(90deg, #007A5E, #2ed573)">Verde</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Valor do Limite ou Meta (R$)</label>
-                    <input type="number" id="valorInput" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label>O que essa barra deve calcular?</label>
-                    <select id="tipoCalculoInput" class="form-control">
-                        <option value="saldo">Meu Saldo em Conta</option>
-                        <option value="fatura">Gastos Totais no Cartão</option>
-                        <option disabled>--- Por Categoria ---</option>
-                        <option value="categoria_alimentacao">🍔 Alimentação (Geral)</option>
-                        <option value="categoria_mercado">🛒 Apenas Mercado</option>
-                        <option value="categoria_lazer">🍿 Lazer / Saídas</option>
-                        <option value="categoria_transporte">🚗 Transporte</option>
-                        <option value="categoria_saude">💊 Saúde</option>
-                        <option value="categoria_moradia">🏠 Moradia</option>
-                    </select>
-                </div>
-                
-                <button type="button" class="btn-primary" id="btnSalvarLimite" onclick="salvarLimite()">Adicionar Indicador</button>
-            </form>
+            <div class="limit-list" id="lista-limites">
+                <p style="text-align:center; color:#a0a0b0; margin-top: 20px;">Carregando limites...</p>
+            </div>
         </div>
 
         <nav class="bottom-nav">
@@ -96,23 +83,225 @@
         </nav>
     </div>
 
+    <div id="modalNovoLimite" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Novo Indicador</h3>
+                <button class="close-btn" onclick="fecharModalNovo()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="formNovoLimite">
+                <div class="form-group">
+                    <label>Título (Ex: Caixa Atual, Cartão)</label>
+                    <input type="text" id="novoTitulo" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Subtítulo (Ex: Livre para gastar)</label>
+                    <input type="text" id="novoSubtitulo" class="form-control" required>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Ícone</label>
+                        <select id="novoIcone" class="form-control">
+                            <option value="fa-wallet">Carteira</option>
+                            <option value="fa-credit-card">Cartão</option>
+                            <option value="fa-piggy-bank">Porquinho</option>
+                            <option value="fa-utensils">Alimentação</option>
+                            <option value="fa-car">Transporte</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Cor da Barra</label>
+                        <select id="novoCor" class="form-control">
+                            <option value="linear-gradient(90deg, #5c2b99, #b070f0)">Roxa</option>
+                            <option value="linear-gradient(90deg, #cf1d30, #ff4757)">Vermelha</option>
+                            <option value="linear-gradient(90deg, #1e40af, #3b82f6)">Azul</option>
+                            <option value="linear-gradient(90deg, #007A5E, #2ed573)">Verde</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Valor do Limite ou Meta (R$)</label>
+                    <input type="number" step="0.01" id="novoValor" class="form-control" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                    <label>O que essa barra deve calcular?</label>
+                    <select id="novoCalculo" class="form-control">
+                        <option value="saldo">Meu Saldo em Conta</option>
+                        <option value="fatura">Gastos Totais no Cartão</option>
+                        <option disabled>--- Por Categoria ---</option>
+                        <option value="categoria_alimentacao">🍔 Alimentação (Geral)</option>
+                        <option value="categoria_mercado">🛒 Apenas Mercado</option>
+                        <option value="categoria_lazer">🍿 Lazer / Saídas</option>
+                        <option value="categoria_transporte">🚗 Transporte</option>
+                        <option value="categoria_saude">💊 Saúde</option>
+                        <option value="categoria_moradia">🏠 Moradia</option>
+                    </select>
+                </div>
+                <button type="button" class="btn-primary" id="btnSalvarNovo" onclick="salvarNovoLimite()">Salvar Indicador</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalEditarLimite" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Indicador</h3>
+                <button class="close-btn" onclick="fecharModalEditar()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="formEditarLimite">
+                <div class="form-group">
+                    <label style="color: #b070f0; font-weight: 600;">Status de Exibição na Home</label>
+                    <select id="editStatus" class="form-control" style="border-color: #b070f0;">
+                        <option value="ativo">Habilitado (Visível na Home)</option>
+                        <option value="inativo">Desabilitado (Oculto)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Título</label>
+                    <input type="text" id="editTitulo" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Subtítulo</label>
+                    <input type="text" id="editSubtitulo" class="form-control" required>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Ícone</label>
+                        <select id="editIcone" class="form-control">
+                            <option value="fa-wallet">Carteira</option>
+                            <option value="fa-credit-card">Cartão</option>
+                            <option value="fa-piggy-bank">Porquinho</option>
+                            <option value="fa-utensils">Alimentação</option>
+                            <option value="fa-car">Transporte</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Cor da Barra</label>
+                        <select id="editCor" class="form-control">
+                            <option value="linear-gradient(90deg, #5c2b99, #b070f0)">Roxa</option>
+                            <option value="linear-gradient(90deg, #cf1d30, #ff4757)">Vermelha</option>
+                            <option value="linear-gradient(90deg, #1e40af, #3b82f6)">Azul</option>
+                            <option value="linear-gradient(90deg, #007A5E, #2ed573)">Verde</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Valor do Limite ou Meta (R$)</label>
+                    <input type="number" step="0.01" id="editValor" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>O que essa barra deve calcular?</label>
+                    <select id="editCalculo" class="form-control">
+                        <option value="saldo">Meu Saldo em Conta</option>
+                        <option value="fatura">Gastos Totais no Cartão</option>
+                        <option value="categoria_alimentacao">🍔 Alimentação (Geral)</option>
+                        <option value="categoria_mercado">🛒 Apenas Mercado</option>
+                        <option value="categoria_lazer">🍿 Lazer / Saídas</option>
+                        <option value="categoria_transporte">🚗 Transporte</option>
+                        <option value="categoria_saude">💊 Saúde</option>
+                        <option value="categoria_moradia">🏠 Moradia</option>
+                    </select>
+                </div>
+                <button type="button" class="btn-primary" id="btnSalvarEdicao" onclick="salvarEdicaoLimite()">Salvar Alterações</button>
+            </form>
+        </div>
+    </div>
+
     <script>
-        const API_URL = "https://sheetdb.io/api/v1/2f7e6q2d2jlid";
+        // Link Atualizado do Google Apps Script
+        const API_URL = "https://script.google.com/macros/s/AKfycbx3B5YDUe-_-uZmSeBU5RPGV0GgZ4g13VF9GJlS2B5Exn51gjhEDIytThTxLhXAl5F85A/exec";
+        
+        let limitesGlobais = [];
+        let idLimiteEditando = null;
 
-        async function salvarLimite() {
+        window.onload = function() {
             const userId = localStorage.getItem('appFinanceiro_userId');
-            if(!userId) return alert("Faça login na Home primeiro!");
+            if(!userId) window.location.href = 'index.html';
+            carregarListaLimites(userId);
+        };
 
-            const titulo = document.getElementById('tituloInput').value;
-            const subtitulo = document.getElementById('subtituloInput').value;
-            const icone = document.getElementById('iconeInput').value;
-            const cor = document.getElementById('corInput').value;
-            const valor = document.getElementById('valorInput').value;
-            const tipoCalculo = document.getElementById('tipoCalculoInput').value;
+        // --- CARREGAR LIMITES (GET) ---
+        async function carregarListaLimites(userId) {
+            const cacheLimites = localStorage.getItem(`cache_limites_${userId}`);
+            
+            if (cacheLimites) {
+                renderizarLimites(JSON.parse(cacheLimites));
+            }
 
-            if(!titulo || !valor) return alert("Preencha o título e o valor do limite.");
+            try {
+                const response = await fetch(`${API_URL}?sheet=limites&id_usuario=${userId}`);
+                const limites = await response.json();
+                
+                localStorage.setItem(`cache_limites_${userId}`, JSON.stringify(limites));
+                renderizarLimites(limites);
+            } catch (e) {
+                if (!cacheLimites) {
+                    document.getElementById('lista-limites').innerHTML = '<p style="text-align:center; color:#cf1d30;">Erro ao carregar a lista.</p>';
+                }
+            }
+        }
 
-            const btn = document.getElementById('btnSalvarLimite');
+        function renderizarLimites(limites) {
+            limitesGlobais = limites;
+            const container = document.getElementById('lista-limites');
+
+            if(limitesGlobais.error || limitesGlobais.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 40px 20px;">
+                        <i class="fa-solid fa-chart-gantt" style="font-size: 3rem; color: #3a3a50; margin-bottom: 15px;"></i>
+                        <p style="color:#a0a0b0;">Você ainda não configurou nenhum indicador.</p>
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            limitesGlobais.forEach(limite => {
+                const isAtivo = limite.status !== 'inativo'; 
+                const badge = isAtivo 
+                    ? '<span class="badge-ativo">Habilitado</span>' 
+                    : '<span class="badge-inativo">Desabilitado</span>';
+
+                html += `
+                <div class="limit-item" onclick="abrirModalEditar('${limite.id_limite}')">
+                    <div class="limit-left">
+                        <div class="limit-icon" style="background: ${limite.cor_tema};">
+                            <i class="fa-solid ${limite.icone}"></i>
+                        </div>
+                        <div class="limit-info">
+                            <h4>${limite.titulo}</h4>
+                            <p>${limite.subtitulo}</p>
+                        </div>
+                    </div>
+                    <div>${badge}</div>
+                </div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // --- MODAL NOVO ---
+        function abrirModalNovo() {
+            document.getElementById('modalNovoLimite').style.display = 'flex';
+        }
+        function fecharModalNovo() {
+            document.getElementById('modalNovoLimite').style.display = 'none';
+            document.getElementById('formNovoLimite').reset();
+        }
+
+        async function salvarNovoLimite() {
+            const userId = localStorage.getItem('appFinanceiro_userId');
+            
+            const titulo = document.getElementById('novoTitulo').value;
+            const subtitulo = document.getElementById('novoSubtitulo').value;
+            const icone = document.getElementById('novoIcone').value;
+            const cor = document.getElementById('novoCor').value;
+            const valor = document.getElementById('novoValor').value;
+            const tipoCalculo = document.getElementById('novoCalculo').value;
+
+            if(!titulo || !valor) return alert("Preencha título e valor.");
+
+            const btn = document.getElementById('btnSalvarNovo');
             btn.innerText = "Salvando..."; btn.style.opacity = "0.7";
 
             const payload = {
@@ -123,21 +312,91 @@
                 icone: icone,
                 cor_tema: cor,
                 valor_limite: valor,
-                tipo_calculo: tipoCalculo
+                tipo_calculo: tipoCalculo,
+                status: 'ativo'
             };
 
             try {
-                await fetch(`${API_URL}?sheet=limites`, {
+                // Ajustado para o POST do Apps Script
+                await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ data: [payload] })
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sheet: "limites",
+                        action: "create", // Informa ao script que é para CRIAR uma linha nova
+                        ...payload
+                    })
                 });
-                alert("Indicador adicionado com sucesso! Volte para a Home para ver.");
-                document.getElementById('limiteForm').reset();
+                fecharModalNovo();
+                // Dá um pequeno tempo para o Google Sheets salvar e recarrega a lista
+                setTimeout(() => carregarListaLimites(userId), 1500); 
             } catch (e) {
                 alert("Erro ao salvar.");
             }
-            btn.innerText = "Adicionar Indicador"; btn.style.opacity = "1";
+            btn.innerText = "Salvar Indicador"; btn.style.opacity = "1";
+        }
+
+        // --- MODAL EDITAR ---
+        function abrirModalEditar(idLimite) {
+            const limite = limitesGlobais.find(l => l.id_limite === idLimite);
+            if(!limite) return;
+
+            idLimiteEditando = idLimite;
+
+            document.getElementById('editStatus').value = (limite.status === 'inativo') ? 'inativo' : 'ativo';
+            document.getElementById('editTitulo').value = limite.titulo;
+            document.getElementById('editSubtitulo').value = limite.subtitulo;
+            document.getElementById('editIcone').value = limite.icone;
+            document.getElementById('editCor').value = limite.cor_tema;
+            document.getElementById('editValor').value = limite.valor_limite;
+            document.getElementById('editCalculo').value = limite.tipo_calculo;
+
+            document.getElementById('modalEditarLimite').style.display = 'flex';
+        }
+
+        function fecharModalEditar() {
+            document.getElementById('modalEditarLimite').style.display = 'none';
+            idLimiteEditando = null;
+        }
+
+        async function salvarEdicaoLimite() {
+            if(!idLimiteEditando) return;
+
+            const userId = localStorage.getItem('appFinanceiro_userId');
+            const btn = document.getElementById('btnSalvarEdicao');
+            btn.innerText = "Atualizando..."; btn.style.opacity = "0.7";
+
+            const payloadAtualizado = {
+                titulo: document.getElementById('editTitulo').value,
+                subtitulo: document.getElementById('editSubtitulo').value,
+                icone: document.getElementById('editIcone').value,
+                cor_tema: document.getElementById('editCor').value,
+                valor_limite: document.getElementById('editValor').value,
+                tipo_calculo: document.getElementById('editCalculo').value,
+                status: document.getElementById('editStatus').value
+            };
+
+            try {
+                // Ajustado para o UPDATE do Apps Script
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sheet: "limites",
+                        action: "update", // Informa ao script que é para ATUALIZAR uma linha existente
+                        id_limite: idLimiteEditando, // Manda o ID para ele saber quem atualizar
+                        ...payloadAtualizado
+                    })
+                });
+                
+                fecharModalEditar();
+                setTimeout(() => carregarListaLimites(userId), 1500);
+            } catch (e) {
+                alert("Erro ao atualizar o limite.");
+            }
+            btn.innerText = "Salvar Alterações"; btn.style.opacity = "1";
         }
     </script>
 </body>
