@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Financeiro - Cartões</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: #12121c; color: #ffffff; display: flex; justify-content: center; }
+        .mobile-container { width: 100%; max-width: 414px; background-color: #161622; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.5); display: flex; flex-direction: column; padding-bottom: 90px; overflow-x: hidden; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 30px 25px 20px; }
+        .header-title { font-size: 1.2rem; font-weight: 600; }
+        .header-btn { background: none; border: none; color: #ffffff; font-size: 1.2rem; cursor: pointer; }
+        
+        .cards-carousel { display: flex; flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x mandatory; padding: 10px 25px 30px; gap: 15px; -webkit-overflow-scrolling: touch; }
+        .cards-carousel::-webkit-scrollbar { height: 4px; }
+        .cards-carousel::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
+        .cards-carousel::-webkit-scrollbar-thumb { background: #b070f0; border-radius: 4px; }
+        .card-wrapper { flex: 0 0 85%; scroll-snap-align: center; transition: transform 0.3s ease; }
+        
+        .credit-card { border-radius: 20px; padding: 25px; height: 200px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.3); user-select: none; }
+        
+        /* Temas */
+        .tema-roxo { background: linear-gradient(135deg, #8A05BE, #5c0382); }
+        .tema-azul { background: linear-gradient(135deg, #003DA5, #002666); color: #F2C14E !important; }
+        .tema-verde { background: linear-gradient(135deg, #007A5E, #00523e); }
+        .tema-vermelho { background: linear-gradient(135deg, #cf1d30, #900c1b); }
+        .tema-laranja { background: linear-gradient(135deg, #ff7e5f, #feb47b); }
+        .tema-preto { background: linear-gradient(135deg, #2b2b2b, #121212); }
+        
+        .add-card-btn { background: linear-gradient(135deg, #1b1b28, #252535); border: 2px dashed #3a3a50; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.3s ease; }
+        .add-card-btn:active { transform: scale(0.98); background: #252535; }
+        .add-card-btn i { font-size: 3rem; color: #3b82f6; margin-bottom: 12px; }
+        .add-card-btn span { font-size: 1.1rem; font-weight: 600; color: #ffffff; text-align: center; line-height: 1.2; }
+
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .bank-name { font-weight: 700; font-size: 1.1rem; letter-spacing: 1px; }
+        .card-middle { margin-top: auto; margin-bottom: 15px; }
+        .card-balance-label { font-size: 0.75rem; opacity: 0.8; }
+        .card-balance { font-size: 1.8rem; font-weight: 700; }
+        .card-limit { font-size: 0.85rem; font-weight: 400; opacity: 0.8; margin-top: 2px; }
+        
+        .card-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
+        /* CSS ajustado para o texto do percentual ou do final do cartão */
+        .card-info-inferior { font-size: 0.85rem; font-weight: 600; opacity: 0.9; }
+        .card-network { font-weight: 700; font-style: italic; }
+        
+        .transactions-section { background-color: #1b1b28; border-top-left-radius: 30px; border-top-right-radius: 30px; padding: 30px 25px; flex-grow: 1; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .section-title { font-size: 1.1rem; font-weight: 600; }
+        .section-subtitle { font-size: 0.8rem; color: #a0a0b0; }
+        .transaction-list { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .transaction-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #252535; }
+        .transaction-item:last-child { border-bottom: none; }
+        .trans-left { display: flex; align-items: center; gap: 15px; }
+        .trans-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; background-color: rgba(138, 5, 190, 0.2); color: #b070f0; }
+        .trans-details h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+        .trans-details p { font-size: 0.75rem; color: #a0a0b0; text-transform: capitalize; }
+        .trans-amount { font-weight: 600; font-size: 0.95rem; }
+        
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 414px; background-color: #161622; display: flex; justify-content: space-around; padding: 20px 0 25px; border-top: 1px solid #252535; z-index: 10; }
+        .nav-item { color: #6a6a80; font-size: 1.2rem; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .nav-item span { font-size: 0.65rem; }
+        .nav-item.active { color: #b070f0; }
+        
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 100; justify-content: center; align-items: flex-end; }
+        .modal-content { background-color: #1b1b28; width: 100%; max-width: 414px; border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 30px 25px; animation: slideUp 0.3s ease; box-shadow: 0 -5px 25px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .modal-header h3 { font-size: 1.2rem; font-weight: 600; }
+        .close-btn { background: none; border: none; color: #a0a0b0; font-size: 1.5rem; cursor: pointer; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 0.85rem; color: #a0a0b0; margin-bottom: 8px; }
+        .form-control { width: 100%; background-color: #12121c; color: #ffffff; border: 1px solid #252535; border-radius: 12px; padding: 14px 15px; font-size: 1rem; outline: none; transition: border 0.3s; }
+        .form-control:focus { border-color: #b070f0; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+        .payment-toggle { display: flex; gap: 10px; }
+        .payment-toggle input[type="radio"] { display: none; }
+        .toggle-btn-modal { flex: 1; text-align: center; padding: 10px; background-color: #12121c; border: 1px solid #252535; border-radius: 12px; cursor: pointer; font-size: 0.75rem; color: #a0a0b0; transition: all 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .payment-toggle input[type="radio"]:checked + .toggle-btn-modal { background-color: #251e3e; border-color: #b070f0; color: #ffffff; font-weight: 600; }
+        .btn-primary { width: 100%; background: linear-gradient(90deg, #5c2b99, #b070f0); color: #ffffff; border: none; border-radius: 12px; padding: 16px; font-size: 1rem; font-weight: 600; margin-top: 10px; cursor: pointer; box-shadow: 0 4px 15px rgba(92, 43, 153, 0.4); }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <header>
+            <button class="header-btn" onclick="window.location.href='index.html'"><i class="fa-solid fa-chevron-left"></i></button>
+            <h1 class="header-title">Meus Cartões</h1>
+            <button class="header-btn" onclick="openExpenseModal()"><i class="fa-solid fa-plus"></i></button>
+        </header>
+
+        <div class="cards-carousel" id="cardSlider">
+            <div class="card-wrapper" id="addCardBtnWrapper">
+                <div class="credit-card add-card-btn" onclick="openNewCardModal()">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Adicionar<br>Novo Cartão</span>
+                </div>
+            </div>
+            <div style="flex: 0 0 5%;" id="cardSpacer"></div>
+        </div>
+
+        <div class="transactions-section">
+            <div class="section-header">
+                <div class="section-title">Últimas Transações</div>
+                <div class="section-subtitle">Geral</div>
+            </div>
+            <div id="lista-lancamentos-cartao" class="transaction-list">
+                <p style="text-align:center; color:#a0a0b0;">Carregando...</p>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+            <a href="tela_cartoes.html" class="nav-item active"><i class="fa-regular fa-credit-card"></i><span>Cartões</span></a>
+            <a href="tela_projetos.html" class="nav-item"><i class="fa-solid fa-suitcase-rolling"></i><span>Projetos</span></a>
+            <a href="tela_investimentos.html" class="nav-item"><i class="fa-solid fa-chart-pie"></i><span>Investir</span></a>
+            <a href="#" class="nav-item"><i class="fa-solid fa-gear"></i><span>Ajustes</span></a>
+            <a href="tela_ajustes.html" class="nav-item"><i class="fa-solid fa-gear"></i><span>Ajustes</span></a>
+        </nav>
+    </div>
+
+    <div id="newCardModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Adicionar Cartão</h3>
+                <button class="close-btn" onclick="closeNewCardModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form id="newCardForm">
+                <div class="form-group">
+                    <label>Nome do Banco ou Cartão</label>
+                    <input type="text" id="bancoInput" class="form-control" placeholder="Ex: Nubank, Itaú, Caju..." required>
+                </div>
+                
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Tipo</label>
+                        <select class="form-control" id="tipoCartaoSelect" required>
+                            <option value="Cartão de Crédito">Crédito</option>
+                            <option value="Conta Corrente">Conta / Débito</option>
+                            <option value="Vale Refeição">Benefício / Vale</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Últimos 4 Dígitos</label>
+                        <input type="text" id="finalCartaoInput" class="form-control" placeholder="Ex: 1234" maxlength="4" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Limite Total ou Saldo Inicial</label>
+                    <input type="number" step="0.01" id="limiteCartaoInput" class="form-control" placeholder="R$ 0.00" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Cor do Cartão</label>
+                    <select class="form-control" id="temaCartaoSelect" required>
+                        <option value="tema-roxo">Roxo (Ex: Nubank)</option>
+                        <option value="tema-azul">Azul (Ex: BB, Caixa)</option>
+                        <option value="tema-verde">Verde (Ex: Alelo, Sicredi)</option>
+                        <option value="tema-vermelho">Vermelho (Ex: Santander, Bradesco)</option>
+                        <option value="tema-laranja">Laranja (Ex: Inter)</option>
+                        <option value="tema-preto">Preto (Ex: Black/Carbon)</option>
+                    </select>
+                </div>
+
+                <button type="button" class="btn-primary" id="btnSaveCard" onclick="saveNewCard()">Adicionar à Carteira</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="expenseModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Novo Lançamento</h3>
+                <button class="close-btn" onclick="closeExpenseModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form id="expenseForm">
+                <div class="form-group">
+                    <label>Tipo de Lançamento</label>
+                    <div class="payment-toggle" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <input type="radio" id="pay-income" name="paymentType" value="receita">
+                        <label for="pay-income" class="toggle-btn-modal" style="color: #2ed573; border-color: #2ed57340;">
+                            <i class="fa-solid fa-arrow-down" style="font-size: 1.1rem;"></i> Receita
+                        </label>
+
+                        <input type="radio" id="pay-credit" name="paymentType" value="credito" checked>
+                        <label for="pay-credit" class="toggle-btn-modal"><i class="fa-regular fa-credit-card" style="font-size: 1.1rem;"></i> Crédito</label>
+                        
+                        <input type="radio" id="pay-debit" name="paymentType" value="debito">
+                        <label for="pay-debit" class="toggle-btn-modal"><i class="fa-solid fa-money-bill-transfer" style="font-size: 1.1rem;"></i> Débito/Pix</label>
+                        
+                        <input type="radio" id="pay-invest" name="paymentType" value="investimento">
+                        <label for="pay-invest" class="toggle-btn-modal"><i class="fa-solid fa-arrow-trend-up" style="font-size: 1.1rem;"></i> Investir</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Título / Estabelecimento</label>
+                    <input type="text" id="tituloInput" class="form-control" placeholder="Ex: Supermercado Extra" required>
+                </div>
+                <div class="form-group">
+                    <label>Valor (R$)</label>
+                    <input type="number" step="0.01" id="valorInput" class="form-control" placeholder="0.00" required>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Data</label>
+                        <input type="date" id="dataInput" class="form-control" required>
+                    </div>
+                    <div class="form-group" id="installmentsGroup" style="flex: 1;">
+                        <label>Parcelas</label>
+                        <select class="form-control" id="installmentsSelect">
+                            <option value="1">À vista</option>
+                            <option value="2">2 vezes</option>
+                            <option value="3">3 vezes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select class="form-control" id="categorySelect" required>
+                        <option value="" disabled selected>Selecione uma categoria</option>
+                        <option value="alimentacao">Alimentação</option>
+                        <option value="transporte">Transporte</option>
+                        <option value="lazer">Lazer</option>
+                    </select>
+                </div>
+
+                <button type="button" class="btn-primary" id="btnSaveExpense" onclick="saveExpense()">Adicionar Gasto</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://sheetdb.io/api/v1/2f7e6q2d2jlid";
+        
+        window.onload = function() {
+            const userId = localStorage.getItem('appFinanceiro_userId');
+            if(!userId) window.location.href = 'index.html';
+            carregarCartoesDinamicamente(userId);
+            carregarListaGastos(userId);
+        };
+
+        function formatarMoedaParaNumero(valorString) {
+            if (!valorString) return 0;
+            let formatado = valorString.toString().replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.');
+            return parseFloat(formatado) || 0;
+        }
+
+        // --- 1. LÓGICA DA ABA "cartoes" ---
+        async function carregarCartoesDinamicamente(userId) {
+            try {
+                const [resCartoes, resGastos] = await Promise.all([
+                    fetch(`${API_URL}/search?id_usuario=${userId}&sheet=cartoes`),
+                    fetch(`${API_URL}/search?id_usuario=${userId}&sheet=lancamentos`)
+                ]);
+                
+                const cartoes = await resCartoes.json();
+                const todosGastos = await resGastos.json();
+                
+                const slider = document.getElementById('cardSlider');
+                const addBtnWrapper = document.getElementById('addCardBtnWrapper');
+                const spacer = document.getElementById('cardSpacer');
+                
+                slider.innerHTML = ''; 
+
+                if(!cartoes.error && cartoes.length > 0) {
+                    cartoes.forEach(c => {
+                        const icone = c.tipo.includes("Crédito") ? '<i class="fa-brands fa-cc-mastercard" style="font-size: 2rem; opacity: 0.8;"></i>' : '<div style="width: 40px; height: 30px; background: linear-gradient(135deg, #e0e0e0, #999); border-radius: 5px;"></div>';
+                        
+                        let labelDestaque = "Saldo Disponível";
+                        let valorDestaque = formatarMoedaParaNumero(c.valor);
+                        let subValorHTML = "";
+                        let infoInferior = `Final ${c.final_cartao}`; // Texto para os cartões de Débito/Vale
+
+                        // Calcula Fatura e Percentual se for Crédito
+                        if (c.tipo.includes("Crédito")) {
+                            labelDestaque = "Fatura Atual";
+                            let totalFatura = 0;
+                            
+                            if (!todosGastos.error) {
+                                todosGastos.forEach(g => {
+                                    if(g.tipo_pagamento === "credito") {
+                                        totalFatura += formatarMoedaParaNumero(g.valor);
+                                    }
+                                });
+                            }
+                            valorDestaque = totalFatura;
+                            let limiteTotal = formatarMoedaParaNumero(c.valor);
+                            subValorHTML = `<div class="card-limit">Limite: R$ ${limiteTotal.toFixed(2)}</div>`;
+                            
+                            // Define o percentual do limite
+                            let percentual = limiteTotal > 0 ? (totalFatura / limiteTotal) * 100 : 0;
+                            infoInferior = `${percentual.toFixed(1)}% do Limite`;
+                        }
+
+                        const htmlCartao = `
+                        <div class="card-wrapper">
+                            <div class="credit-card ${c.tema}">
+                                <div class="card-top">
+                                    <span class="bank-name">${c.nome_banco}</span>
+                                    ${icone}
+                                </div>
+                                <div class="card-middle">
+                                    <div class="card-balance-label">${labelDestaque}</div>
+                                    <div class="card-balance">R$ ${valorDestaque.toFixed(2)}</div>
+                                    ${subValorHTML}
+                                </div>
+                                <div class="card-bottom">
+                                    <div class="card-info-inferior">${infoInferior}</div>
+                                    <div class="card-network">${c.tipo}</div>
+                                </div>
+                            </div>
+                        </div>`;
+                        
+                        slider.insertAdjacentHTML('beforeend', htmlCartao);
+                    });
+                }
+                
+                slider.appendChild(addBtnWrapper);
+                slider.appendChild(spacer);
+
+            } catch (e) { console.error("Erro ao carregar cartões:", e); }
+        }
+
+        function openNewCardModal() { document.getElementById('newCardModal').style.display = 'flex'; }
+        function closeNewCardModal() { document.getElementById('newCardModal').style.display = 'none'; document.getElementById('newCardForm').reset(); }
+
+        async function saveNewCard() {
+            const userId = localStorage.getItem('appFinanceiro_userId');
+            const banco = document.getElementById('bancoInput').value;
+            const tipo = document.getElementById('tipoCartaoSelect').value;
+            const finalCartao = document.getElementById('finalCartaoInput').value;
+            const valor = document.getElementById('limiteCartaoInput').value;
+            const tema = document.getElementById('temaCartaoSelect').value;
+
+            if(!banco || !finalCartao || !valor) return alert("Preencha todos os campos do cartão.");
+
+            const btn = document.getElementById('btnSaveCard');
+            btn.innerText = "Salvando..."; btn.style.opacity = "0.7";
+
+            const payload = {
+                id_cartao: Date.now().toString(),
+                id_usuario: userId,
+                nome_banco: banco,
+                tipo: tipo,
+                valor: valor,
+                final_cartao: finalCartao,
+                tema: tema
+            };
+
+            try {
+                await fetch(`${API_URL}?sheet=cartoes`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: [payload] })
+                });
+
+                alert("Cartão adicionado com sucesso!");
+                closeNewCardModal();
+                btn.innerText = "Adicionar à Carteira"; btn.style.opacity = "1";
+                carregarCartoesDinamicamente(userId);
+            } catch (error) {
+                alert("Erro ao salvar! Tente novamente.");
+                btn.innerText = "Adicionar à Carteira";
+            }
+        }
+
+        // --- 2. LÓGICA DA ABA "lancamentos" (Gastos Recentes) ---
+        async function carregarListaGastos(userId) {
+            try {
+                const response = await fetch(`${API_URL}/search?id_usuario=${userId}&sheet=lancamentos`);
+                const lancamentos = await response.json();
+                const container = document.getElementById('lista-lancamentos-cartao');
+                
+                if(lancamentos.length === 0 || lancamentos.error) {
+                    container.innerHTML = '<p style="text-align:center; color:#a0a0b0;">Nenhuma transação ainda.</p>';
+                    return;
+                }
+
+                let html = '';
+                [...lancamentos].reverse().forEach(l => {
+                    const valorLimpo = formatarMoedaParaNumero(l.valor);
+                    
+                    html += `
+                    <div class="transaction-item">
+                        <div class="trans-left">
+                            <div class="trans-icon"><i class="fa-solid fa-tag"></i></div>
+                            <div class="trans-details">
+                                <h4>${l.titulo}</h4>
+                                <p>${l.categoria} • ${l.data}</p>
+                            </div>
+                        </div>
+                        <div class="trans-amount">-R$ ${valorLimpo.toFixed(2)}</div>
+                    </div>`;
+                });
+                container.innerHTML = html;
+            } catch (e) { console.error(e); }
+        }
+
+        function openExpenseModal() { document.getElementById('expenseModal').style.display = 'flex'; document.getElementById('dataInput').valueAsDate = new Date(); }
+        function closeExpenseModal() { document.getElementById('expenseModal').style.display = 'none'; document.getElementById('expenseForm').reset(); }
+
+        async function saveExpense() {
+            const userId = localStorage.getItem('appFinanceiro_userId');
+            const tipo = document.querySelector('input[name="paymentType"]:checked').value;
+            const titulo = document.getElementById('tituloInput').value;
+            const valor = document.getElementById('valorInput').value;
+            const data = document.getElementById('dataInput').value;
+            const parcelas = document.getElementById('installmentsSelect').value;
+            const categoria = document.getElementById('categorySelect').value;
+
+            if(!titulo || !valor || !data || !categoria) return alert("Preencha título, valor e categoria!");
+
+            const btn = document.getElementById('btnSaveExpense');
+            btn.innerText = "Salvando..."; btn.style.opacity = "0.7";
+
+            // 1. Prepara o payload para a aba de Lançamentos (histórico geral)
+            const payloadLancamento = {
+                id_lancamento: Date.now().toString(),
+                id_usuario: userId,
+                tipo_pagamento: tipo,
+                titulo: titulo,
+                valor: valor,
+                data: data,
+                parcelas: parcelas,
+                categoria: categoria,
+                detalhes: "",
+                id_projeto: ""
+            };
+
+            try {
+                // Salva na aba Lançamentos
+                await fetch(`${API_URL}?sheet=lancamentos`, { 
+                    method: 'POST', 
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify({ data: [payloadLancamento] }) 
+                });
+
+                // 2. SE FOR INVESTIMENTO, salva também na aba investimentos_carteira
+                if (tipo === 'investimento') {
+                    const payloadInvestimento = {
+                        id_usuario: userId,
+                        id_ativo: titulo, // Usa o título digitado como nome do ativo (ex: Tesouro Direto)
+                        tipo: categoria,  // Usa a categoria ou pode ser deixado fixo
+                        valor_total_investido: valor
+                    };
+
+                    await fetch(`${API_URL}?sheet=investimentos_carteira`, { 
+                        method: 'POST', 
+                        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ data: [payloadInvestimento] }) 
+                    });
+                }
+
+                alert("Registro adicionado com sucesso!");
+                closeExpenseModal();
+                btn.innerText = "Adicionar Gasto"; 
+                btn.style.opacity = "1";
+                
+                // Atualiza a interface
+                carregarListaGastos(userId); 
+                carregarCartoesDinamicamente(userId); 
+                
+            } catch (error) { 
+                alert("Erro ao salvar. Tente novamente."); 
+                btn.innerText = "Adicionar Gasto"; 
+                btn.style.opacity = "1";
+            }
+        }
+
+        document.querySelectorAll('input[name="paymentType"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const tipo = e.target.value;
+                const group = document.getElementById('installmentsGroup');
+                const selectCategoria = document.getElementById('categorySelect');
+                const btnSave = document.getElementById('btnSaveExpense');
+                
+                // 1. Lógica das parcelas
+                if(tipo === 'debito' || tipo === 'investimento' || tipo === 'receita') {
+                    group.style.opacity = '0.4'; 
+                    group.style.pointerEvents = 'none'; 
+                    document.getElementById('installmentsSelect').value = "1";
+                } else {
+                    group.style.opacity = '1'; 
+                    group.style.pointerEvents = 'auto';
+                }
+
+                // 2. Lógica dinâmica das Categorias
+                selectCategoria.innerHTML = '<option value="" disabled selected>Selecione uma categoria</option>'; 
+                
+                if (tipo === 'receita') {
+                    selectCategoria.innerHTML += `
+                        <option value="Salário">Salário / Remuneração</option>
+                        <option value="Transferência Recebida">Transferência / Pix</option>
+                        <option value="Rendimentos">Rendimentos</option>
+                        <option value="Outras Entradas">Outras Entradas</option>
+                    `;
+                    btnSave.innerText = "Adicionar Receita";
+                    
+                } else if (tipo === 'investimento') {
+                    selectCategoria.innerHTML += `
+                        <option value="Reserva de Emergência">Reserva de Emergência</option>
+                        <option value="Fundo Imobiliário">Fundo Imobiliário (FII)</option>
+                        <option value="Ações">Ações</option>
+                        <option value="Criptomoedas">Criptomoedas</option>
+                        <option value="Renda Fixa">Renda Fixa (CDB/Tesouro)</option>
+                        <option value="Outros Investimentos">Outros</option>
+                    `;
+                    btnSave.innerText = "Adicionar Investimento";
+                    
+                } else {
+                    selectCategoria.innerHTML += `
+                        <option value="alimentacao">Alimentação (Jantares/Ifood)</option>
+                        <option value="mercado">Supermercado</option>
+                        <option value="transporte">Transporte</option>
+                        <option value="lazer">Lazer</option>
+                        <option value="saude">Saúde</option>
+                        <option value="moradia">Moradia</option>
+                        <option value="outros">Outros</option>
+                    `;
+                    btnSave.innerText = "Adicionar Gasto";
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Financeiro - Nova Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: #12121c; color: #ffffff; display: flex; justify-content: center; }
+        .mobile-container { width: 100%; max-width: 414px; background-color: #161622; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.5); display: flex; flex-direction: column; padding-bottom: 90px; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 30px 25px 15px; }
+        .header-btn { background: none; border: none; color: #ffffff; font-size: 1.2rem; cursor: pointer; }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .user-info h2 { font-size: 1rem; font-weight: 600; }
+        .balance-section { padding: 10px 25px 25px; }
+        .balance-title { font-size: 0.85rem; color: #a0a0b0; margin-bottom: 5px; }
+        .balance-amount { font-size: 2.5rem; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 20px; }
+        .progress-section { padding: 0 25px; display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+        .progress-card { background-color: #1b1b28; padding: 18px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .progress-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 12px; }
+        .progress-title-group { display: flex; align-items: center; gap: 10px; }
+        .progress-icon { width: 35px; height: 35px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .icon-wallet { background-color: #2d1f44; color: #b070f0; } 
+        .icon-card { background-color: #3d1c1d; color: #ff4757; }   
+        .icon-ticket { background-color: #1a2a42; color: #3b82f6; } 
+        .progress-title { font-size: 0.95rem; font-weight: 600; }
+        .progress-subtitle { font-size: 0.7rem; color: #a0a0b0; margin-top: 2px; }
+        .progress-values { text-align: right; }
+        .current-value { font-size: 1rem; font-weight: 700; }
+        .target-value { font-size: 0.75rem; color: #a0a0b0; }
+        .bar-bg { width: 100%; height: 8px; background-color: #252535; border-radius: 4px; overflow: hidden; position: relative; }
+        .bar-fill { height: 100%; border-radius: 4px; position: absolute; left: 0; top: 0; }
+        .fill-wallet { background: linear-gradient(90deg, #5c2b99, #b070f0); width: 80%; }
+        .fill-card { background: linear-gradient(90deg, #cf1d30, #ff4757); width: 65%; }
+        .fill-ticket { background: linear-gradient(90deg, #1e40af, #3b82f6); width: 45%; }
+        .progress-footer { display: flex; justify-content: space-between; margin-top: 8px; font-size: 0.75rem; font-weight: 600; }
+        .color-wallet { color: #b070f0; }
+        .color-card { color: #ff4757; }
+        .color-ticket { color: #3b82f6; }
+        .transactions-section { background-color: #1b1b28; border-top-left-radius: 30px; border-top-right-radius: 30px; padding: 25px 25px 30px; flex-grow: 1; }
+        .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .section-title a { font-size: 0.8rem; color: #b070f0; text-decoration: none; font-weight: 400; }
+        .transaction-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #252535; }
+        .transaction-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+        .trans-left { display: flex; align-items: center; gap: 15px; }
+        .trans-icon { width: 42px; height: 42px; background-color: #252535; color: #ffffff; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .trans-details h4 { font-size: 0.95rem; font-weight: 600; color: #ffffff; margin-bottom: 4px; }
+        .trans-details p { font-size: 0.75rem; color: #a0a0b0; text-transform: capitalize; }
+        .trans-amount { font-weight: 600; font-size: 0.95rem; }
+        .trans-amount.positive { color: #2ed573; } /* Verde padrão do app */
+        .trans-amount.negative { color: #ff4757; } /* Vermelho padrão do app */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 414px; background-color: #161622; display: flex; justify-content: space-around; padding: 20px 0 25px; border-top: 1px solid #252535; z-index: 10; }
+        .nav-item { color: #6a6a80; font-size: 1.2rem; text-decoration: none; transition: color 0.3s ease; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .nav-item span { font-size: 0.65rem; }
+        .nav-item.active { color: #b070f0; }
+
+        /* Modal Login */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 9999; justify-content: center; align-items: center; }
+        .modal-content { background-color: #1b1b28; width: 100%; max-width: 350px; border-radius: 25px; padding: 30px 25px; animation: popIn 0.3s ease; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 0.85rem; color: #a0a0b0; margin-bottom: 8px; }
+        .form-control { width: 100%; background-color: #12121c; color: #ffffff; border: 1px solid #252535; border-radius: 12px; padding: 14px 15px; font-size: 1rem; outline: none; transition: border 0.3s; }
+        .form-control:focus { border-color: #b070f0; }
+        .btn-primary { width: 100%; background: linear-gradient(90deg, #5c2b99, #b070f0); color: #ffffff; border: none; border-radius: 12px; padding: 16px; font-size: 1rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(92, 43, 153, 0.4); margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <header>
+            <div class="user-info">
+                <i class="fa-regular fa-circle-user" style="font-size: 1.5rem;"></i>
+                <h2>Olá, Carregando...</h2>
+            </div>
+            <button class="header-btn" onclick="fazerLogout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </header>
+
+        <div class="balance-section">
+            <div class="balance-title">Saldo em Conta</div>
+            <div class="balance-amount">R$ ---</div>
+        </div>
+
+        <div class="progress-section" id="container-limites">
+        </div>
+
+        <div class="transactions-section" id="lista-gastos">
+            <div class="section-title">Carregando da Planilha...</div>
+        </div>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item active"><i class="fa-solid fa-house"></i><span>Home</span></a>
+            <a href="tela_cartoes.html" class="nav-item"><i class="fa-regular fa-credit-card"></i><span>Cartões</span></a>
+            <a href="tela_projetos.html" class="nav-item"><i class="fa-solid fa-suitcase-rolling"></i><span>Projetos</span></a>
+            <a href="tela_investimentos.html" class="nav-item"><i class="fa-solid fa-chart-pie"></i><span>Investir</span></a>
+            <a href="tela_ajustes.html" class="nav-item"><i class="fa-solid fa-gear"></i><span>Ajustes</span></a>
+        </nav>
+    </div>
+
+    <div id="loginModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="font-size: 1.4rem; text-align: center; margin-bottom: 10px;">Bem-vindo! 👋</h3>
+            <p style="text-align: center; color: #a0a0b0; font-size: 0.9rem; margin-bottom: 25px;">Identifique-se para acessar a planilha.</p>
+            <form onsubmit="event.preventDefault(); salvarLogin();">
+                <div class="form-group">
+                    <label>Seu Nome</label>
+                    <input type="text" id="userNameInput" class="form-control" placeholder="Ex: Eler" required>
+                </div>
+                <div class="form-group">
+                    <label>ID Único (Banco de Dados)</label>
+                    <input type="text" id="userIdInput" class="form-control" placeholder="Ex: eler123" required>
+                </div>
+                <button type="submit" class="btn-primary">Acessar Conta</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://sheetdb.io/api/v1/2f7e6q2d2jlid";
+
+        window.onload = function() {
+            verificarUsuario();
+        };
+
+        function verificarUsuario() {
+            let userId = localStorage.getItem('appFinanceiro_userId');
+            let userName = localStorage.getItem('appFinanceiro_userName');
+
+            if (!userId || !userName) {
+                document.getElementById('loginModal').style.display = 'flex';
+            } else {
+                atualizarNomeInterface(userName);
+                carregarDadosPlanilha(userId);
+            }
+        }
+
+        function salvarLogin() {
+            const userName = document.getElementById('userNameInput').value.trim();
+            const userId = document.getElementById('userIdInput').value.trim().toLowerCase().replace(/\s+/g, ''); 
+
+            if (userName !== "" && userId !== "") {
+                localStorage.setItem('appFinanceiro_userName', userName);
+                localStorage.setItem('appFinanceiro_userId', userId);
+                document.getElementById('loginModal').style.display = 'none';
+                atualizarNomeInterface(userName);
+                carregarDadosPlanilha(userId);
+            }
+        }
+
+        function atualizarNomeInterface(nome) {
+            const saudacao = document.querySelector('.user-info h2');
+            if (saudacao) {
+                saudacao.innerText = 'Olá, ' + nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase();
+            }
+        }
+
+        function fazerLogout() {
+            localStorage.removeItem('appFinanceiro_userId');
+            localStorage.removeItem('appFinanceiro_userName');
+            location.reload(); 
+        }
+
+        // --- 1. Adicione esta função auxiliar dentro do seu <script> ---
+        function formatarMoedaParaNumero(valorString) {
+            if (!valorString) return 0;
+            // Remove R$, pontos de milhar, espaços e substitui vírgula por ponto
+            let formatado = valorString.toString().replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.');
+            return parseFloat(formatado) || 0;
+        }
+
+        // --- 2. Atualize a sua função carregarDadosPlanilha ---
+        async function carregarDadosPlanilha(userId) {
+            try {
+                // Busca Lançamentos e Limites ao mesmo tempo
+                const [resLancamentos, resLimites] = await Promise.all([
+                    fetch(`${API_URL}/search?id_usuario=${userId}&sheet=lancamentos`),
+                    fetch(`${API_URL}/search?id_usuario=${userId}&sheet=limites`)
+                ]);
+                
+                const lancamentos = await resLancamentos.json();
+                const limites = await resLimites.json();
+
+                // 1. Renderiza os Lançamentos Recentes
+                const containerLista = document.getElementById('lista-gastos');
+                let htmlLista = `<div class="section-title">Gastos Recentes <a href="#">Ver todos</a></div>`;
+
+                if(lancamentos.length === 0 || lancamentos.error) {
+                    htmlLista += `<p style="text-align:center; color:#a0a0b0; padding:20px;">Nenhum dado na planilha ainda.</p>`;
+                } else {
+                    const recentes = [...lancamentos].reverse().slice(0, 5);
+                    recentes.forEach(l => {
+                        const valorLimpo = formatarMoedaParaNumero(l.valor);
+                        
+                        // Lógica de Cores e Sinais
+                        let classeCor = 'negative';
+                        let prefixo = '- R$ ';
+                        
+                        if (l.tipo_pagamento === 'receita') {
+                            classeCor = 'positive';
+                            prefixo = '+ R$ '; // Se preferir sem o +, basta deixar 'R$ '
+                        }
+
+                        htmlLista += `
+                        <div class="transaction-item">
+                            <div class="trans-left">
+                                <div class="trans-icon"><i class="fa-solid fa-money-bill"></i></div>
+                                <div class="trans-details">
+                                    <h4>${l.titulo}</h4>
+                                    <p>${l.tipo_pagamento} • ${l.data}</p>
+                                </div>
+                            </div>
+                            <div class="trans-amount ${classeCor}">${prefixo}${valorLimpo.toFixed(2)}</div>
+                        </div>`;
+                    });
+                }
+                containerLista.innerHTML = htmlLista;
+
+                // 2. Cálculos Globais (Saldo em Conta e Fatura do Cartão)
+                let saldo = 0;
+                let faturaCartao = 0;
+
+                if (!lancamentos.error) {
+                    lancamentos.forEach(l => { 
+                        const val = formatarMoedaParaNumero(l.valor);
+                        if (l.tipo_pagamento === 'receita') saldo += val;
+                        else if (l.tipo_pagamento === 'debito') saldo -= val;
+                        else if (l.tipo_pagamento === 'investimento') saldo -= val;
+                        else if (l.tipo_pagamento === 'credito') faturaCartao += val; // Soma a fatura
+                    });
+                }
+                document.querySelector('.balance-amount').innerText = `R$ ${saldo.toFixed(2)}`;
+
+                // 3. Renderiza as Barras Dinâmicas de Limites
+                const containerLimites = document.getElementById('container-limites');
+                let htmlLimites = '';
+
+                if(limites.length > 0 && !limites.error) {
+                    limites.forEach(limite => {
+                        let valorAtual = 0;
+                        
+                        // Decide o que essa barra está medindo
+                        if(limite.tipo_calculo === 'saldo') {
+                            valorAtual = saldo;
+                        } 
+                        else if (limite.tipo_calculo === 'fatura') {
+                            valorAtual = faturaCartao;
+                        } 
+                        else if (limite.tipo_calculo.startsWith('categoria_')) {
+                            // Extrai apenas o nome da categoria (ex: tira "categoria_" e sobra "mercado")
+                            const categoriaAlvo = limite.tipo_calculo.replace('categoria_', '');
+                            
+                            // Vasculha todos os lançamentos somando apenas os que batem com a categoria
+                            if (!lancamentos.error) {
+                                lancamentos.forEach(l => {
+                                    // Soma se for a categoria certa E se for um gasto (credito ou debito)
+                                    if (l.categoria === categoriaAlvo && (l.tipo_pagamento === 'credito' || l.tipo_pagamento === 'debito')) {
+                                        valorAtual += formatarMoedaParaNumero(l.valor);
+                                    }
+                                });
+                            }
+                        }
+
+                        let teto = formatarMoedaParaNumero(limite.valor_limite);
+                        let percentual = teto > 0 ? (valorAtual / teto) * 100 : 0;
+                        if(percentual > 100) percentual = 100; // Trava em 100% para o visual não quebrar
+                        if(percentual < 0) percentual = 0; // Se o saldo for negativo
+
+                        htmlLimites += `
+                        <div class="progress-card">
+                            <div class="progress-header">
+                                <div class="progress-title-group">
+                                    <div class="progress-icon" style="background-color: #252535; color: #fff;">
+                                        <i class="fa-solid ${limite.icone}"></i>
+                                    </div>
+                                    <div>
+                                        <div class="progress-title">${limite.titulo}</div>
+                                        <div class="progress-subtitle">${limite.subtitulo}</div>
+                                    </div>
+                                </div>
+                                <div class="progress-values">
+                                    <div class="current-value">R$ ${valorAtual.toFixed(2)}</div>
+                                    <div class="target-value">de R$ ${teto.toFixed(2)}</div>
+                                </div>
+                            </div>
+                            <div class="bar-bg"><div class="bar-fill" style="background: ${limite.cor_tema}; width: ${percentual}%;"></div></div>
+                        </div>`;
+                    });
+                }
+                
+                containerLimites.innerHTML = htmlLimites;
+
+            } catch (error) {
+                console.error("Erro na API:", error);
+            }
+        }
+    </script>
+</body>
+</html>

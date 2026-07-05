@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Financeiro - Ajustes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: #12121c; color: #ffffff; display: flex; justify-content: center; }
+        .mobile-container { width: 100%; max-width: 414px; background-color: #161622; min-height: 100vh; position: relative; display: flex; flex-direction: column; padding-bottom: 90px; }
+        header { padding: 30px 25px 20px; display: flex; align-items: center; gap: 15px; }
+        .header-btn { background: none; border: none; color: #ffffff; font-size: 1.2rem; cursor: pointer; }
+        .header-title { font-size: 1.2rem; font-weight: 600; }
+        .content { padding: 0 25px; }
+        
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 0.85rem; color: #a0a0b0; margin-bottom: 8px; }
+        .form-control { width: 100%; background-color: #12121c; color: #ffffff; border: 1px solid #252535; border-radius: 12px; padding: 14px 15px; font-size: 1rem; outline: none; }
+        .btn-primary { width: 100%; background: linear-gradient(90deg, #5c2b99, #b070f0); color: #ffffff; border: none; border-radius: 12px; padding: 16px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 414px; background-color: #161622; display: flex; justify-content: space-around; padding: 20px 0 25px; border-top: 1px solid #252535; }
+        .nav-item { color: #6a6a80; font-size: 1.2rem; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .nav-item span { font-size: 0.65rem; }
+        .nav-item.active { color: #b070f0; }
+    </style>
+</head>
+<body>
+    <div class="mobile-container">
+        <header>
+            <button class="header-btn" onclick="window.location.href='index.html'"><i class="fa-solid fa-chevron-left"></i></button>
+            <h1 class="header-title">Configurar Limites</h1>
+        </header>
+
+        <div class="content">
+            <p style="color: #a0a0b0; font-size: 0.9rem; margin-bottom: 25px;">Adicione os indicadores (barras de progresso) que aparecerão na sua tela inicial.</p>
+            
+            <form id="limiteForm">
+                <div class="form-group">
+                    <label>Título (Ex: Caixa Atual, Cartão)</label>
+                    <input type="text" id="tituloInput" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Subtítulo (Ex: Livre para gastar)</label>
+                    <input type="text" id="subtituloInput" class="form-control" required>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Ícone</label>
+                        <select id="iconeInput" class="form-control">
+                            <option value="fa-wallet">Carteira</option>
+                            <option value="fa-credit-card">Cartão</option>
+                            <option value="fa-piggy-bank">Porquinho</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Cor da Barra</label>
+                        <select id="corInput" class="form-control">
+                            <option value="linear-gradient(90deg, #5c2b99, #b070f0)">Roxa</option>
+                            <option value="linear-gradient(90deg, #cf1d30, #ff4757)">Vermelha</option>
+                            <option value="linear-gradient(90deg, #1e40af, #3b82f6)">Azul</option>
+                            <option value="linear-gradient(90deg, #007A5E, #2ed573)">Verde</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Valor do Limite ou Meta (R$)</label>
+                    <input type="number" id="valorInput" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>O que essa barra deve calcular?</label>
+                    <select id="tipoCalculoInput" class="form-control">
+                        <option value="saldo">Meu Saldo em Conta</option>
+                        <option value="fatura">Gastos Totais no Cartão</option>
+                        <option disabled>--- Por Categoria ---</option>
+                        <option value="categoria_alimentacao">🍔 Alimentação (Geral)</option>
+                        <option value="categoria_mercado">🛒 Apenas Mercado</option>
+                        <option value="categoria_lazer">🍿 Lazer / Saídas</option>
+                        <option value="categoria_transporte">🚗 Transporte</option>
+                        <option value="categoria_saude">💊 Saúde</option>
+                        <option value="categoria_moradia">🏠 Moradia</option>
+                    </select>
+                </div>
+                
+                <button type="button" class="btn-primary" id="btnSalvarLimite" onclick="salvarLimite()">Adicionar Indicador</button>
+            </form>
+        </div>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+            <a href="tela_cartoes.html" class="nav-item"><i class="fa-regular fa-credit-card"></i><span>Cartões</span></a>
+            <a href="tela_projetos.html" class="nav-item"><i class="fa-solid fa-suitcase-rolling"></i><span>Projetos</span></a>
+            <a href="tela_investimentos.html" class="nav-item"><i class="fa-solid fa-chart-pie"></i><span>Investir</span></a>
+            <a href="tela_ajustes.html" class="nav-item active"><i class="fa-solid fa-gear"></i><span>Ajustes</span></a>
+        </nav>
+    </div>
+
+    <script>
+        const API_URL = "https://sheetdb.io/api/v1/2f7e6q2d2jlid";
+
+        async function salvarLimite() {
+            const userId = localStorage.getItem('appFinanceiro_userId');
+            if(!userId) return alert("Faça login na Home primeiro!");
+
+            const titulo = document.getElementById('tituloInput').value;
+            const subtitulo = document.getElementById('subtituloInput').value;
+            const icone = document.getElementById('iconeInput').value;
+            const cor = document.getElementById('corInput').value;
+            const valor = document.getElementById('valorInput').value;
+            const tipoCalculo = document.getElementById('tipoCalculoInput').value;
+
+            if(!titulo || !valor) return alert("Preencha o título e o valor do limite.");
+
+            const btn = document.getElementById('btnSalvarLimite');
+            btn.innerText = "Salvando..."; btn.style.opacity = "0.7";
+
+            const payload = {
+                id_limite: Date.now().toString(),
+                id_usuario: userId,
+                titulo: titulo,
+                subtitulo: subtitulo,
+                icone: icone,
+                cor_tema: cor,
+                valor_limite: valor,
+                tipo_calculo: tipoCalculo
+            };
+
+            try {
+                await fetch(`${API_URL}?sheet=limites`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: [payload] })
+                });
+                alert("Indicador adicionado com sucesso! Volte para a Home para ver.");
+                document.getElementById('limiteForm').reset();
+            } catch (e) {
+                alert("Erro ao salvar.");
+            }
+            btn.innerText = "Adicionar Indicador"; btn.style.opacity = "1";
+        }
+    </script>
+</body>
+</html>

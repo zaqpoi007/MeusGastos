@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Financeiro - Projetos e Viagens</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: #12121c; color: #ffffff; display: flex; justify-content: center; }
+        
+        .mobile-container { width: 100%; max-width: 414px; background-color: #161622; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.5); display: flex; flex-direction: column; padding-bottom: 90px; overflow-x: hidden; }
+
+        /* Cabeçalho */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 30px 25px 20px; }
+        .header-title { font-size: 1.2rem; font-weight: 600; }
+        .header-btn { background: none; border: none; color: #ffffff; font-size: 1.2rem; cursor: pointer; }
+
+        /* Lista de Projetos */
+        .projects-list { padding: 10px 25px; display: flex; flex-direction: column; gap: 15px; flex-grow: 1; }
+        
+        .project-card { background: linear-gradient(135deg, #1e1e2d, #252535); border-radius: 20px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s; border-left: 4px solid #b070f0; }
+        .project-card:active { transform: scale(0.98); }
+        .project-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .project-icon { width: 45px; height: 45px; background-color: rgba(176, 112, 240, 0.2); color: #b070f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .project-info h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+        .project-info p { font-size: 0.8rem; color: #a0a0b0; }
+        .project-total { font-size: 1.5rem; font-weight: 700; text-align: right; }
+        .project-total span { display: block; font-size: 0.75rem; color: #a0a0b0; font-weight: 400; margin-bottom: 5px; }
+
+        /* Estado Vazio (Empty State) */
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 60px; text-align: center; }
+        .empty-state i { font-size: 4rem; color: #252535; margin-bottom: 20px; }
+        .empty-state h3 { color: #ffffff; margin-bottom: 10px; font-size: 1.2rem; }
+        .empty-state p { color: #a0a0b0; font-size: 0.9rem; margin-bottom: 25px; line-height: 1.4; padding: 0 20px; }
+
+        /* Detalhes do Projeto */
+        #project-detail-view { display: none; flex-direction: column; flex-grow: 1; }
+        .detail-header { padding: 0 25px 20px; text-align: center; }
+        .detail-header h2 { font-size: 1.2rem; color: #a0a0b0; font-weight: 400; margin-bottom: 10px; }
+        .detail-total { font-size: 2.8rem; font-weight: 700; color: #ffffff; letter-spacing: -1px; }
+
+        /* Divisão por forma de pagamento */
+        .breakdown-section { padding: 0 25px 25px; display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; }
+        .breakdown-section::-webkit-scrollbar { display: none; }
+        .breakdown-card { background-color: #1b1b28; padding: 15px; border-radius: 15px; min-width: 130px; display: flex; flex-direction: column; gap: 10px; border: 1px solid #252535; }
+        .bd-icon { font-size: 1.2rem; }
+        .bd-nubank { color: #8A05BE; } .bd-bb { color: #F2C14E; } .bd-pix { color: #32BCAD; }
+        .bd-title { font-size: 0.75rem; color: #a0a0b0; }
+        .bd-value { font-size: 1rem; font-weight: 600; }
+
+        /* Lista de Transações */
+        .transactions-section { background-color: #1b1b28; border-top-left-radius: 30px; border-top-right-radius: 30px; padding: 30px 25px; flex-grow: 1; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .section-title { font-size: 1.1rem; font-weight: 600; }
+        
+        /* Botão de Relacionar Gastos */
+        .btn-relacionar { background-color: rgba(176, 112, 240, 0.15); color: #b070f0; border: 1px solid #b070f0; padding: 8px 15px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; }
+        .btn-relacionar:active { background-color: #b070f0; color: #fff; }
+
+        .transaction-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #252535; }
+        .transaction-item:last-child { border-bottom: none; }
+        .trans-left { display: flex; align-items: center; gap: 15px; }
+        .trans-icon { width: 42px; height: 42px; background-color: #252535; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1rem; color: #ffffff; }
+        .trans-details h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+        .trans-details p { font-size: 0.75rem; color: #a0a0b0; }
+        .trans-amount { font-weight: 600; font-size: 0.95rem; }
+
+        /* Modais */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 100; justify-content: center; align-items: flex-end; }
+        .modal-content { background-color: #1b1b28; width: 100%; max-width: 414px; max-height: 85vh; border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 30px 25px 20px; animation: slideUp 0.3s ease; display: flex; flex-direction: column; overflow-y: auto; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .modal-header-fixed { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header-fixed h3 { font-size: 1.1rem; font-weight: 600; }
+        .modal-header-fixed p { font-size: 0.8rem; color: #a0a0b0; margin-top: 5px; }
+        .close-btn { background: none; border: none; color: #a0a0b0; font-size: 1.5rem; cursor: pointer; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 0.85rem; color: #a0a0b0; margin-bottom: 8px; }
+        .form-control { width: 100%; background-color: #12121c; color: #ffffff; border: 1px solid #252535; border-radius: 12px; padding: 14px 15px; font-size: 1rem; outline: none; transition: border 0.3s; }
+        .form-control:focus { border-color: #b070f0; }
+        .btn-primary { width: 100%; background: linear-gradient(90deg, #5c2b99, #b070f0); color: #ffffff; border: none; border-radius: 12px; padding: 16px; font-size: 1rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px rgba(92, 43, 153, 0.4); margin-top: 10px; }
+
+        /* Lista de Checkboxes (Modal Relacionar) */
+        .expenses-list-scroll { overflow-y: auto; flex-grow: 1; margin-bottom: 20px; padding-right: 5px; }
+        .expenses-list-scroll::-webkit-scrollbar { width: 4px; }
+        .expenses-list-scroll::-webkit-scrollbar-thumb { background: #3a3a50; border-radius: 4px; }
+        .expense-check-item { display: flex; align-items: center; justify-content: space-between; background-color: #12121c; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #252535; cursor: pointer; transition: border 0.2s; }
+        .expense-check-item.selected { border-color: #b070f0; background-color: rgba(176, 112, 240, 0.05); }
+        .check-left { display: flex; align-items: center; gap: 15px; }
+        .custom-checkbox { width: 22px; height: 22px; border-radius: 6px; border: 2px solid #555; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .custom-checkbox i { color: transparent; font-size: 0.8rem; }
+        .expense-check-item.selected .custom-checkbox { background-color: #b070f0; border-color: #b070f0; }
+        .expense-check-item.selected .custom-checkbox i { color: #ffffff; }
+
+        /* Menu Inferior */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 414px; background-color: #161622; display: flex; justify-content: space-around; padding: 20px 0 25px; border-top: 1px solid #252535; z-index: 10; }
+        .nav-item { color: #6a6a80; font-size: 1.2rem; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .nav-item span { font-size: 0.65rem; }
+        .nav-item.active { color: #b070f0; }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        
+        <header id="main-header">
+            <button class="header-btn" id="btn-back" style="visibility: hidden;" onclick="showList()"><i class="fa-solid fa-chevron-left"></i></button>
+            <h1 class="header-title" id="page-title">Projetos & Viagens</h1>
+            <button class="header-btn" id="btn-add" onclick="openNewProjectModal()"><i class="fa-solid fa-plus"></i></button>
+        </header>
+
+        <div id="projects-list-view" class="projects-list">
+            <p style="text-align:center; color:#a0a0b0; padding-top: 30px;">Conectando à planilha...</p>
+        </div>
+
+        <div id="project-detail-view">
+            <div class="detail-header">
+                <h2>Total Gasto</h2>
+                <div class="detail-total">R$ 0,00</div>
+            </div>
+
+            <div class="breakdown-section">
+                <div class="breakdown-card">
+                    <div class="bd-icon bd-nubank"><i class="fa-solid fa-wallet"></i></div>
+                    <div>
+                        <div class="bd-title">Total Alocado</div>
+                        <div class="bd-value">R$ 0,00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="transactions-section">
+                <div class="section-header">
+                    <div class="section-title">Lançamentos</div>
+                    <button class="btn-relacionar" onclick="openLinkModal()">
+                        <i class="fa-solid fa-link"></i> Relacionar
+                    </button>
+                </div>
+                <div id="project-expenses-list">
+                    <p style="text-align:center; color:#a0a0b0; font-size: 0.85rem;">Nenhum gasto vinculado a este projeto ainda.</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+            <a href="tela_cartoes.html" class="nav-item"><i class="fa-regular fa-credit-card"></i><span>Cartões</span></a>
+            <a href="tela_projetos.html" class="nav-item active"><i class="fa-solid fa-suitcase-rolling"></i><span>Projetos</span></a>
+            <a href="tela_investimentos.html" class="nav-item"><i class="fa-solid fa-chart-pie"></i><span>Investir</span></a>
+            <a href="#" class="nav-item"><i class="fa-solid fa-gear"></i><span>Ajustes</span></a>
+            <a href="tela_ajustes.html" class="nav-item"><i class="fa-solid fa-gear"></i><span>Ajustes</span></a>
+        </nav>
+    </div>
+
+    <div id="newProjectModal" class="modal-overlay">
+        <div class="modal-content" style="height: auto;">
+            <div class="modal-header-fixed">
+                <div>
+                    <h3>Novo Projeto / Viagem</h3>
+                    <p>Crie um novo centro de custos</p>
+                </div>
+                <button class="close-btn" onclick="closeNewProjectModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form id="newProjectForm">
+                <div class="form-group">
+                    <label>Nome do Projeto</label>
+                    <input type="text" id="nomeProjetoInput" class="form-control" placeholder="Ex: Bahia 2026, Reforma da Sala..." required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição Breve</label>
+                    <input type="text" id="descProjetoInput" class="form-control" placeholder="Ex: Férias de Janeiro" required>
+                </div>
+                <div class="form-group">
+                    <label>Categoria / Ícone</label>
+                    <select id="iconeProjetoSelect" class="form-control">
+                        <option value="fa-plane-departure">Viagem ✈️</option>
+                        <option value="fa-hammer">Casa & Reforma 🔨</option>
+                        <option value="fa-champagne-glasses">Festa & Eventos 🎉</option>
+                        <option value="fa-car">Carro & Mota 🚗</option>
+                        <option value="fa-folder-open">Outro 📌</option>
+                    </select>
+                </div>
+                
+                <button type="button" id="btnSaveProject" class="btn-primary" onclick="saveNewProject()">Criar Projeto</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="linkModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header-fixed">
+                <div>
+                    <h3>Relacionar Gastos</h3>
+                    <p>Selecione os itens para incluir neste projeto</p>
+                </div>
+                <button class="close-btn" onclick="closeLinkModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="expenses-list-scroll">
+                <p style="text-align:center; color:#a0a0b0; padding-top: 20px;">Carregando gastos disponíveis...</p>
+            </div>
+
+            <button class="btn-primary" onclick="saveLinks()">Adicionar Selecionados</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://sheetdb.io/api/v1/2f7e6q2d2jlid";
+
+        window.onload = function() {
+            const userId = localStorage.getItem('appFinanceiro_userId');
+            if(!userId) window.location.href = 'index.html'; // Proteção de rota
+            carregarProjetos(userId);
+        };
+
+        // --- 1. LER PROJETOS DA PLANILHA ---
+        async function carregarProjetos(userId) {
+            const listContainer = document.getElementById('projects-list-view');
+            if (!listContainer) return;
+
+            try {
+                const res = await fetch(`${API_URL}/search?id_usuario=${userId}&sheet=projetos`);
+                const projetos = await res.json();
+                
+                // Se a planilha estiver vazia, renderiza o Estado Vazio (Empty State)
+                if(projetos.length === 0 || projetos.error) {
+                    listContainer.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fa-solid fa-suitcase-rolling"></i>
+                            <h3>Nenhum projeto ainda</h3>
+                            <p>Crie sua primeira viagem, reforma ou evento para organizar os seus gastos agrupados.</p>
+                            <button class="btn-primary" style="width: auto; padding: 12px 25px; margin-top: 10px;" onclick="openNewProjectModal()">
+                                <i class="fa-solid fa-plus"></i> Criar Primeiro Projeto
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Se tiver projetos, desenha os cartões
+                let html = '';
+                projetos.forEach((p, index) => {
+                    // Alterna as cores da borda esquerda só para ficar bonito visualmente
+                    const coresBorda = ["#b070f0", "#32BCAD", "#F2C14E", "#cf1d30"];
+                    const cor = coresBorda[index % coresBorda.length];
+                    
+                    html += `
+                    <div class="project-card" style="border-left-color: ${cor};" onclick="showProjectDetail('${p.nome}')">
+                        <div class="project-header">
+                            <div class="project-icon" style="background-color: transparent; border: 1px solid ${cor}; color: ${cor};">
+                                <i class="fa-solid ${p.icone || 'fa-folder-open'}"></i>
+                            </div>
+                            <div class="project-total">
+                                <span>Status</span>
+                                Ativo
+                            </div>
+                        </div>
+                        <div class="project-info">
+                            <h3>${p.nome}</h3>
+                            <p>${p.descricao}</p>
+                        </div>
+                    </div>`;
+                });
+                listContainer.innerHTML = html;
+
+            } catch (e) { 
+                console.error(e); 
+                listContainer.innerHTML = '<p style="text-align:center; color:#ff4757; padding-top: 30px;">Erro de conexão com a base de dados.</p>';
+            }
+        }
+
+        // --- 2. SALVAR NOVO PROJETO ---
+        async function saveNewProject() {
+            const userId = localStorage.getItem('appFinanceiro_userId');
+            const nome = document.getElementById('nomeProjetoInput').value;
+            const descricao = document.getElementById('descProjetoInput').value;
+            const icone = document.getElementById('iconeProjetoSelect').value;
+
+            if(!nome || !descricao) return alert("Por favor, preencha o nome e a descrição!");
+
+            const btn = document.getElementById('btnSaveProject');
+            btn.innerText = "Salvando..."; btn.style.opacity = "0.7";
+
+            const payload = {
+                id_projeto: "proj_" + Date.now().toString(),
+                id_usuario: userId,
+                nome: nome,
+                descricao: descricao,
+                icone: icone
+            };
+
+            try {
+                await fetch(`${API_URL}?sheet=projetos`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: [payload] })
+                });
+
+                alert('Projeto criado com sucesso!');
+                closeNewProjectModal();
+                btn.innerText = "Criar Projeto"; btn.style.opacity = "1";
+                carregarProjetos(userId); // Recarrega a tela apagando o "Empty State"
+            } catch(e) {
+                alert("Erro ao salvar projeto. Tente novamente.");
+                btn.innerText = "Criar Projeto"; btn.style.opacity = "1";
+            }
+        }
+
+        // --- NAVEGAÇÃO E MODAIS ---
+        const listView = document.getElementById('projects-list-view');
+        const detailView = document.getElementById('project-detail-view');
+        const btnBack = document.getElementById('btn-back');
+        const btnAdd = document.getElementById('btn-add');
+        const pageTitle = document.getElementById('page-title');
+
+        // Simula a entrada nos detalhes de um projeto
+        function showProjectDetail(nomeProjeto) {
+            listView.style.display = 'none';
+            detailView.style.display = 'flex';
+            btnBack.style.visibility = 'visible';
+            btnAdd.style.visibility = 'hidden'; 
+            pageTitle.innerText = nomeProjeto;
+        }
+
+        function showList() {
+            detailView.style.display = 'none';
+            listView.style.display = 'flex';
+            btnBack.style.visibility = 'hidden';
+            btnAdd.style.visibility = 'visible'; 
+            pageTitle.innerText = 'Projetos & Viagens';
+        }
+
+        function openNewProjectModal() { document.getElementById('newProjectModal').style.display = 'flex'; }
+        function closeNewProjectModal() { document.getElementById('newProjectModal').style.display = 'none'; document.getElementById('newProjectForm').reset(); }
+        function openLinkModal() { document.getElementById('linkModal').style.display = 'flex'; alert("No futuro, isso carregará os gastos sem projeto vinculados a este usuário da aba 'lancamentos'."); }
+        function closeLinkModal() { document.getElementById('linkModal').style.display = 'none'; }
+    </script>
+</body>
+</html>
