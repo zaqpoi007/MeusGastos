@@ -331,9 +331,17 @@
             window.location.reload();
         }
 
-        function formatarMoedaParaNumero(valorString) {
-            if (!valorString) return 0;
-            let formatado = valorString.toString().replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.');
+        function formatarMoedaParaNumero(valor) {
+            if (!valor) return 0;
+
+            if (typeof valor === 'number') return valor;
+
+            let formatado = valor.toString().trim().replace(/[R$\s]/g, '');
+
+            if (formatado.includes(',')) {
+                formatado = formatado.replace(/\./g, '').replace(',', '.');
+            }
+            
             return parseFloat(formatado) || 0;
         }
 
