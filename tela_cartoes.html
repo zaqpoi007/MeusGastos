@@ -145,8 +145,8 @@
                         </select>
                     </div>
                     <div class="form-group" style="flex: 1;">
-                        <label>Últimos 4 Dígitos</label>
-                        <input type="text" id="finalCartaoInput" class="form-control" placeholder="Ex: 1234" maxlength="4" required>
+                        <label>Dia de Fechamento</label>
+                        <input type="number" id="fechamentoCartaoInput" class="form-control" placeholder="Ex: 15" min="1" max="31" required>
                     </div>
                 </div>
 
@@ -404,9 +404,12 @@
                     
                     let labelDestaque = "Saldo Disponível";
                     let saldoInicial = formatarMoedaParaNumero(c.valor);
-                    let valorDestaque = 0; // Alterado para começar em zero
+                    let valorDestaque = 0; 
                     let subValorHTML = "";
-                    let infoInferior = `Final ${c.final_cartao}`; 
+                    
+                    // Lê o dia do fechamento (ou pega o antigo final_cartao caso ainda tenha salvo assim na planilha)
+                    let diaExibicao = c.dia_fechamento || c.final_cartao || "--";
+                    let infoInferior = "";
 
                     let faturaCredito = 0;
                     let receitasConta = 0;
@@ -435,12 +438,18 @@
                         subValorHTML = `<div class="card-limit">Limite: R$ ${limiteTotal.toFixed(2)}</div>`;
                         
                         let percentual = limiteTotal > 0 ? (faturaCredito / limiteTotal) * 100 : 0;
-                        infoInferior = `${percentual.toFixed(1)}% do Limite`;
+                        // NOVO: Combina a data de fechamento com a porcentagem do limite
+                        infoInferior = `Fecha dia ${diaExibicao} • ${percentual.toFixed(1)}% Usado`;
                         
                     } else {
-                        // NOVO: Cálculo focado apenas no fluxo de caixa (Receitas - Gastos)
-                        // Ignora o valor inicial cadastrado na criação do cartão
                         valorDestaque = receitasConta - gastosConta;
+                        
+                        // NOVO: Textos customizados para Vales ou Conta Corrente
+                        if (c.tipo === "Vale Refeição") {
+                            infoInferior = `Recarga dia ${diaExibicao}`;
+                        } else {
+                            infoInferior = `Atualizado hoje`;
+                        }
                     }
 
                     const htmlCartao = `
@@ -583,11 +592,11 @@
             const userId = localStorage.getItem('appFinanceiro_userId');
             const banco = document.getElementById('bancoInput').value;
             const tipo = document.getElementById('tipoCartaoSelect').value;
-            const finalCartao = document.getElementById('finalCartaoInput').value;
+            const diaFechamento = document.getElementById('fechamentoCartaoInput').value;
             const valor = document.getElementById('limiteCartaoInput').value;
             const tema = document.getElementById('temaCartaoSelect').value;
 
-            if(!banco || !finalCartao || !valor) return alert("Preencha todos os campos do cartão.");
+            if(!banco || !diaFechamento || !valor) return alert("Preencha todos os campos do cartão.");
 
             const btn = document.getElementById('btnSaveCard');
             btn.innerText = "Salvando..."; btn.style.opacity = "0.7";
@@ -598,7 +607,7 @@
                 nome_banco: banco,
                 tipo: tipo,
                 valor: valor,
-                final_cartao: finalCartao,
+                dia_fechamento: diaFechamento, // Atualizado para a nova coluna
                 tema: tema
             };
 
