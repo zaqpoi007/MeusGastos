@@ -404,7 +404,7 @@
                     
                     let labelDestaque = "Saldo Disponível";
                     let saldoInicial = formatarMoedaParaNumero(c.valor);
-                    let valorDestaque = saldoInicial;
+                    let valorDestaque = 0; // Alterado para começar em zero
                     let subValorHTML = "";
                     let infoInferior = `Final ${c.final_cartao}`; 
 
@@ -438,7 +438,9 @@
                         infoInferior = `${percentual.toFixed(1)}% do Limite`;
                         
                     } else {
-                        valorDestaque = saldoInicial + receitasConta - gastosConta;
+                        // NOVO: Cálculo focado apenas no fluxo de caixa (Receitas - Gastos)
+                        // Ignora o valor inicial cadastrado na criação do cartão
+                        valorDestaque = receitasConta - gastosConta;
                     }
 
                     const htmlCartao = `
@@ -532,8 +534,14 @@
                 return;
             }
 
+            // NOVO: Ordena a lista pelas datas (da mais recente para a mais antiga)
+            const gastosOrdenados = [...gastosFiltrados].sort((a, b) => {
+                return new Date(b.data) - new Date(a.data);
+            });
+
             let html = '';
-            [...gastosFiltrados].reverse().forEach(l => {
+            // Substituímos o .reverse() pelo nosso array já ordenado cronologicamente
+            gastosOrdenados.forEach(l => {
                 const valorLimpo = formatarMoedaParaNumero(l.valor);
                 
                 let dataFormatada = l.data;
