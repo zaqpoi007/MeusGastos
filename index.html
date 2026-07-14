@@ -181,40 +181,42 @@
             // 1. Tenta carregar do Cache primeiro (Carregamento Instantâneo)
             const cacheLancamentos = localStorage.getItem(`cache_lancamentos_${userId}`);
             const cacheLimites = localStorage.getItem(`cache_limites_${userId}`);
+            const cacheCartoes = localStorage.getItem(`cache_cartoes_${userId}`); // NOVO: Busca cartões no cache
 
             if (cacheLancamentos && cacheLimites) {
-                // Desenha a tela imediatamente com o que tem salvo
-                renderizarHome(JSON.parse(cacheLancamentos), JSON.parse(cacheLimites));
+                const cartoesParse = cacheCartoes ? JSON.parse(cacheCartoes) : [];
+                renderizarHome(JSON.parse(cacheLancamentos), JSON.parse(cacheLimites), cartoesParse);
             }
 
             // 2. Busca na Planilha em Background (Atualização Silenciosa)
             try {
-                const [resLancamentos, resLimites] = await Promise.all([
+                const [resLancamentos, resLimites, resCartoes] = await Promise.all([
                     fetch(`${API_URL}?sheet=lancamentos&id_usuario=${userId}`),
-                    fetch(`${API_URL}?sheet=limites&id_usuario=${userId}`)
+                    fetch(`${API_URL}?sheet=limites&id_usuario=${userId}`),
+                    fetch(`${API_URL}?sheet=cartoes&id_usuario=${userId}`) // NOVO: Traz cartões da API
                 ]);
                 
                 const lancamentos = await resLancamentos.json();
                 const limites = await resLimites.json();
+                const cartoes = await resCartoes.json();
 
                 // 3. Salva os dados frescos no Cache para a próxima vez
                 localStorage.setItem(`cache_lancamentos_${userId}`, JSON.stringify(lancamentos));
                 localStorage.setItem(`cache_limites_${userId}`, JSON.stringify(limites));
+                localStorage.setItem(`cache_cartoes_${userId}`, JSON.stringify(cartoes));
 
                 // 4. Atualiza a tela com os dados reais
-                renderizarHome(lancamentos, limites);
+                renderizarHome(lancamentos, limites, cartoes);
 
             } catch (error) {
                 console.error("Erro na API em background:", error);
-                // Só mostra erro se não houver cache nenhum para mostrar
                 if (!cacheLancamentos) {
                     document.getElementById('lista-gastos').innerHTML = `<p style="text-align:center; color:#cf1d30; padding:20px;">Erro ao conectar. Verifique sua internet.</p>`;
                 }
             }
         }
 
-        // Nova função criada para "desenhar" a tela baseada nos dados fornecidos
-        function renderizarHome(lancamentos, limites) {
+        function renderizarHome(lancamentos, limites, cartoes = []) {
             const containerLista = document.getElementById('lista-gastos');
             let htmlLista = `<div class="section-title">Gastos Recentes <a href="#">Ver todos</a></div>`;
 
@@ -259,10 +261,24 @@
             if (!lancamentos.error) {
                 lancamentos.forEach(l => { 
                     const val = formatarMoedaParaNumero(l.valor);
-                    if (l.tipo_pagamento === 'receita') saldo += val;
-                    else if (l.tipo_pagamento === 'debito') saldo -= val;
-                    else if (l.tipo_pagamento === 'investimento') saldo -= val;
-                    else if (l.tipo_pagamento === 'credito') faturaCartao += val; 
+
+                    // NOVO: Descobre se o lançamento pertence a um Vale Refeição
+                    let isValeRefeicao = false;
+                    if (cartoes && cartoes.length > 0 && !cartoes.error) {
+                        const cartao = cartoes.find(c => String(c.id_cartao) === String(l.id_cartao));
+                        if (cartao && cartao.tipo === 'Vale Refeição') {
+                            isValeRefeicao = true;
+                        }
+                    }
+                    
+                    if (l.tipo_pagamento === 'credito') {
+                        faturaCartao += val; 
+                    } else if (!isValeRefeicao) {
+                        // Só mexe no saldo global se NÃO for Vale Refeição
+                        if (l.tipo_pagamento === 'receita') saldo += val;
+                        else if (l.tipo_pagamento === 'debito') saldo -= val;
+                        else if (l.tipo_pagamento === 'investimento') saldo -= val;
+                    }
                 });
             }
             document.querySelector('.balance-amount').innerText = `R$ ${saldo.toFixed(2)}`;
@@ -270,7 +286,7 @@
             const containerLimites = document.getElementById('container-limites');
             let htmlLimites = '';
 
-            if(limites.length > 0 && !limites.error) {
+            if(limites && limites.length > 0 && !limites.error) {
                 limites.forEach(limite => {
                     let valorAtual = 0;
                     
@@ -321,6 +337,7 @@
             
             containerLimites.innerHTML = htmlLimites;
         }
+
     </script>
 </body>
 </html>
