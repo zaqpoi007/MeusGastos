@@ -408,34 +408,39 @@
                 cartoes.forEach(c => {
                     const icone = c.tipo.includes("Crédito") ? '<i class="fa-brands fa-cc-mastercard" style="font-size: 2rem; opacity: 0.8;"></i>' : '<div style="width: 40px; height: 30px; background: linear-gradient(135deg, #e0e0e0, #999); border-radius: 5px;"></div>';
                     
-                    let labelDestaque = "Saldo Disponível";
-                    let saldoInicial = formatarMoedaParaNumero(c.valor);
-                    let valorDestaque = saldoInicial;
-                    let subValorHTML = "";
-                    let infoInferior = `Final ${c.final_cartao}`; 
+                    let faturaCredito = 0;
+                    let receitasConta = 0;
+                    let gastosConta = 0;
 
-                    let totalGastoNesteCartao = 0;
                     if (!todosGastos.error) {
                         todosGastos.forEach(g => {
-                            // A CORREÇÃO ESTÁ AQUI: Envolvendo os dois IDs em String()
                             if(String(g.id_cartao) === String(c.id_cartao)) {
-                                totalGastoNesteCartao += formatarMoedaParaNumero(g.valor);
+                                const valor = formatarMoedaParaNumero(g.valor);
+                                // Separa a matemática por tipo de pagamento
+                                if (g.tipo_pagamento === 'credito') {
+                                    faturaCredito += valor;
+                                } else if (g.tipo_pagamento === 'receita') {
+                                    receitasConta += valor;
+                                } else {
+                                    gastosConta += valor; // débito e investimento
+                                }
                             }
                         });
                     }
 
                     if (c.tipo.includes("Crédito")) {
                         labelDestaque = "Fatura Atual";
-                        valorDestaque = totalGastoNesteCartao;
+                        valorDestaque = faturaCredito; // Mostra SOMENTE o que foi gasto no crédito
                         
                         let limiteTotal = saldoInicial; 
                         subValorHTML = `<div class="card-limit">Limite: R$ ${limiteTotal.toFixed(2)}</div>`;
                         
-                        let percentual = limiteTotal > 0 ? (totalGastoNesteCartao / limiteTotal) * 100 : 0;
+                        let percentual = limiteTotal > 0 ? (faturaCredito / limiteTotal) * 100 : 0;
                         infoInferior = `${percentual.toFixed(1)}% do Limite`;
                         
                     } else {
-                        valorDestaque = saldoInicial - totalGastoNesteCartao;
+                        // Conta Corrente: Saldo Base + Receitas - Gastos (Débito/Investir)
+                        valorDestaque = saldoInicial + receitasConta - gastosConta;
                     }
 
                     const htmlCartao = `
@@ -513,34 +518,57 @@
             document.getElementById('nomeCartaoFoco').innerText = nomeBanco;
             const container = document.getElementById('lista-lancamentos-cartao');
             
-            // Mantendo a correção anterior do String() para evitar o erro do filtro
-            const gastosFiltrados = globalGastos.filter(g => String(g.id_cartao) === String(idCartao));
+            const cartao = globalCartoes.find(c => String(c.id_cartao) === String(idCartao));
+            
+            // 1. Filtro Inteligente
+            const gastosFiltrados = globalGastos.filter(g => {
+                if (String(g.id_cartao) !== String(idCartao)) return false;
+                
+                if (cartao && cartao.tipo.includes("Crédito")) {
+                    return g.tipo_pagamento === 'credito'; // Cartão de Crédito SÓ mostra gastos no crédito
+                } else {
+                    return g.tipo_pagamento !== 'credito'; // Contas/Vales mostram receita, débito e investimentos
+                }
+            });
 
             if(gastosFiltrados.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#a0a0b0;">Nenhuma transação neste cartão.</p>';
+                container.innerHTML = '<p style="text-align:center; color:#a0a0b0;">Nenhuma transação para este cartão/conta.</p>';
                 return;
             }
 
+            // 2. Renderização Visual
             let html = '';
             [...gastosFiltrados].reverse().forEach(l => {
                 const valorLimpo = formatarMoedaParaNumero(l.valor);
                 
-                // NOVO: Limpeza do formato da data
                 let dataFormatada = l.data;
                 if (dataFormatada && dataFormatada.includes("T")) {
-                    dataFormatada = dataFormatada.split("T")[0]; // Apanha apenas o lado esquerdo do "T"
+                    dataFormatada = dataFormatada.split("T")[0];
+                }
+
+                let corValor = '';
+                let sinal = '-R$ ';
+                let icone = 'fa-tag';
+                
+                // Formatação especial se for entrada de dinheiro
+                if (l.tipo_pagamento === 'receita') {
+                    corValor = 'color: #2ed573;';
+                    sinal = '+R$ ';
+                    icone = 'fa-money-bills';
+                } else if (l.tipo_pagamento === 'investimento') {
+                    icone = 'fa-arrow-trend-up';
                 }
 
                 html += `
                 <div class="transaction-item">
                     <div class="trans-left">
-                        <div class="trans-icon"><i class="fa-solid fa-tag"></i></div>
+                        <div class="trans-icon"><i class="fa-solid ${icone}"></i></div>
                         <div class="trans-details">
                             <h4>${l.titulo}</h4>
                             <p>${l.categoria} • ${dataFormatada}</p> 
                         </div>
                     </div>
-                    <div class="trans-amount">-R$ ${valorLimpo.toFixed(2)}</div>
+                    <div class="trans-amount" style="${corValor}">${sinal}${valorLimpo.toFixed(2)}</div>
                 </div>`;
             });
             container.innerHTML = html;
