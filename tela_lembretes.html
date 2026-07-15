@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Financeiro - Lembretes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: #12121c; color: #ffffff; display: flex; justify-content: center; }
+        .mobile-container { width: 100%; max-width: 414px; background-color: #161622; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.5); display: flex; flex-direction: column; padding-bottom: 100px; overflow-x: hidden; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; padding: 30px 25px 20px; }
+        .header-title { font-size: 1.2rem; font-weight: 600; }
+        .header-btn { background: none; border: none; color: #ffffff; font-size: 1.2rem; cursor: pointer; }
+
+        .summary-section { padding: 10px 25px 25px; display: flex; justify-content: space-between; align-items: center; }
+        .summary-info h3 { font-size: 1.8rem; font-weight: 700; color: #ff4757; }
+        .summary-info p { font-size: 0.85rem; color: #a0a0b0; margin-top: 4px; }
+
+        .reminders-section { background-color: #1b1b28; border-top-left-radius: 30px; border-top-right-radius: 30px; padding: 30px 25px; flex-grow: 1; box-shadow: 0 -5px 20px rgba(0,0,0,0.2); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .section-title { font-size: 1.1rem; font-weight: 600; }
+
+        .reminder-list { display: flex; flex-direction: column; gap: 15px; }
+        .reminder-card { background-color: #12121c; border-radius: 18px; padding: 20px; border: 1px solid #252535; display: flex; flex-direction: column; gap: 15px; transition: border-color 0.3s; }
+        .reminder-card.late { border-color: #cf1d30; }
+        
+        .card-top { display: flex; justify-content: space-between; align-items: center; }
+        .reminder-info { display: flex; align-items: center; gap: 12px; }
+        .reminder-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        
+        /* Cores das Categorias */
+        .cat-moradia { background-color: rgba(138, 5, 190, 0.15); color: #b070f0; }
+        .cat-transporte { background-color: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+        .cat-alimentacao { background-color: rgba(46, 213, 115, 0.15); color: #2ed573; }
+        .cat-outros { background-color: rgba(160, 160, 176, 0.15); color: #a0a0b0; }
+
+        .info-text h4 { font-size: 0.95rem; font-weight: 600; }
+        .info-text p { font-size: 0.75rem; color: #a0a0b0; margin-top: 2px; }
+
+        .reminder-value { font-size: 1.1rem; font-weight: 700; text-align: right; }
+        
+        .card-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px solid #252535; }
+        .account-tag { font-size: 0.75rem; color: #a0a0b0; display: flex; align-items: center; gap: 6px; }
+        .account-tag i { font-size: 0.85rem; }
+
+        .btn-pay { background: linear-gradient(90deg, #2ed573, #1abc9c); color: #ffffff; border: none; padding: 8px 16px; border-radius: 12px; font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: transform 0.2s; }
+        .btn-pay:active { transform: scale(0.95); }
+
+        /* Estrutura Geral dos Modais */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 100; justify-content: center; align-items: flex-end; }
+        .modal-content { background-color: #1b1b28; width: 100%; max-width: 414px; border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 30px 25px; animation: slideUp 0.3s ease; max-height: 90vh; overflow-y: auto; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .modal-header h3 { font-size: 1.2rem; font-weight: 600; }
+        .close-btn { background: none; border: none; color: #a0a0b0; font-size: 1.5rem; cursor: pointer; }
+        
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 0.85rem; color: #a0a0b0; margin-bottom: 8px; }
+        .form-control { width: 100%; background-color: #12121c; color: #ffffff; border: 1px solid #252535; border-radius: 12px; padding: 14px 15px; font-size: 1rem; outline: none; }
+        .form-control:focus { border-color: #b070f0; }
+
+        .btn-primary { width: 100%; background: linear-gradient(90deg, #5c2b99, #b070f0); color: #ffffff; border: none; border-radius: 12px; padding: 16px; font-size: 1rem; font-weight: 600; margin-top: 10px; cursor: pointer; }
+
+        /* Menu de Navegação */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 414px; background-color: #161622; display: flex; justify-content: space-around; padding: 20px 0 25px; border-top: 1px solid #252535; z-index: 10; }
+        .nav-item { color: #6a6a80; font-size: 1.2rem; text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+        .nav-item span { font-size: 0.65rem; }
+        .nav-item.active { color: #b070f0; }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <header>
+            <button class="header-btn" onclick="window.location.href='index.html'"><i class="fa-solid fa-chevron-left"></i></button>
+            <h1 class="header-title">Lembretes & Boletos</h1>
+            <button class="header-btn" onclick="abrirModalNovo()"><i class="fa-solid fa-plus"></i></button>
+        </header>
+
+        <div class="summary-section">
+            <div class="summary-info">
+                <p>Próximos Compromissos</p>
+                <h3 id="totalPendente">R$ 0,00</h3>
+            </div>
+            <i class="fa-regular fa-bell" style="font-size: 2.2rem; color: #ff4757; opacity: 0.8;"></i>
+        </div>
+
+        <div class="reminders-section">
+            <div class="section-header">
+                <div class="section-title">Minhas Contas Recorrentes</div>
+            </div>
+            <div class="reminder-list" id="lista-lembretes">
+                <p style="text-align:center; color:#a0a0b0; padding-top: 20px;">Carregando compromissos...</p>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item"><i class="fa-solid fa-house"></i><span>Home</span></a>
+            <a href="tela_cartoes.html" class="nav-item"><i class="fa-regular fa-credit-card"></i><span>Cartões</span></a>
+            <a href="tela_lembretes.html" class="nav-item active"><i class="fa-regular fa-bell"></i><span>Lembretes</span></a>
+            <a href="tela_projetos.html" class="nav-item"><i class="fa-solid fa-suitcase-rolling"></i><span>Projetos</span></a>
+            <a href="tela_investimentos.html" class="nav-item"><i class="fa-solid fa-chart-pie"></i><span>Investir</span></a>
+            <a href="tela_ajustes.html" class="nav-item"><i class="fa-solid fa-gear"></i><span>Ajustes</span></a>
+        </nav>
+    </div>
+
+    <div id="newReminderModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Novo Lembrete Recorrente</h3>
+                <button class="close-btn" onclick="fecharModalNovo()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="newReminderForm">
+                <div class="form-group">
+                    <label>Título (Ex: Aluguel de Julho)</label>
+                    <input type="text" id="lembreteTitulo" class="form-control" placeholder="Ex: Aluguel" required>
+                </div>
+                <div class="form-group">
+                    <label>ID de Grupo (Ex: aluguel, celular, carro)</label>
+                    <input type="text" id="lembreteGrupo" class="form-control" placeholder="Para agrupar as recorrências" required>
+                </div>
+                <div class="form-group">
+                    <label>Valor Estimado (R$)</label>
+                    <input type="text" inputmode="numeric" id="lembreteValor" class="form-control" placeholder="0,00" oninput="mascaraMoeda(this)" required>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>1º Vencimento</label>
+                        <input type="date" id="lembreteData" class="form-control" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Repetir (Meses)</label>
+                        <input type="number" id="lembreteOcorrencias" class="form-control" value="1" min="1" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="lembreteCategoria" class="form-control">
+                        <option value="moradia">🏠 Moradia</option>
+                        <option value="transporte">🚗 Transporte</option>
+                        <option value="alimentacao">🍔 Alimentação</option>
+                        <option value="outros">📌 Outros</option>
+                    </select>
+                </div>
+                <button type="button" class="btn-primary" id="btnSalvarLembrete" onclick="salvarLembrete()">Criar Lembrete</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="confirmPaymentModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirmar Pagamento</h3>
+                <button class="close-btn" onclick="fecharModalConfirmar()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div style="margin-bottom: 22px;">
+                <p style="font-size: 0.85rem; color: #a0a0b0;">Você está dando baixa no compromisso:</p>
+                <h4 id="confirmarTitulo" style="font-size: 1.1rem; margin-top: 5px; color: #ffffff; font-weight: 600;">---</h4>
+            </div>
+            <div class="form-group">
+                <label>Valor Real Pago (R$)</label>
+                <input type="text" inputmode="numeric" id="confirmarValorInput" class="form-control" placeholder="0,00" oninput="mascaraMoeda(this)" required>
+            </div>
+            <p style="font-size: 0.75rem; color: #a0a0b0; margin-bottom: 15px; line-height: 1.4;">
+                *Caso o boleto tenha vindo com um valor diferente este mês (multa, descontos ou rateio), altere o campo acima.
+            </p>
+            <button type="button" class="btn-primary" style="background: linear-gradient(90deg, #2ed573, #1abc9c);" id="btnFinalizarPagamento" onclick="executarPagamentoComValorAjustado()">Confirmar e Debitar</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbx3B5YDUe-_-uZmSeBU5RPGV0GgZ4g13VF9GJlS2B5Exn51gjhEDIytThTxLhXAl5F85A/exec";
+        
+        let globalLembretes = [];
+        let globalCartoes = [];
+        let idLembreteEmPagamento = null; 
+
+        window.onload = function() {
+            const userId = localStorage.getItem('appFinanceiro_userId');
+            if(!userId) window.location.href = 'index.html';
+            carregarLembretesEContas(userId);
+        };
+
+        // NOVO: Função para formatar os inputs na hora que o usuário digita
+        function mascaraMoeda(campo) {
+            let valor = campo.value.replace(/\D/g, ''); // Remove tudo o que não for número
+            if (valor === '') {
+                campo.value = '';
+                return;
+            }
+            valor = (parseInt(valor, 10) / 100).toFixed(2); // Divide por 100 para ter as casas decimais
+            valor = valor.replace('.', ','); // Troca o ponto pela vírgula
+            valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'); // Insere os pontos a cada milhar
+            campo.value = valor;
+        }
+
+        // Função segura que lê textos formatados (ex: "1.250,50") e transforma no número real para cálculo
+        function formatarMoedaParaNumero(valor) {
+            if (!valor) return 0;
+            if (typeof valor === 'number') return valor;
+            let formatado = valor.toString().trim().replace(/[R$\s]/g, '');
+            if (formatado.includes(',')) {
+                formatado = formatado.replace(/\./g, '').replace(',', '.');
+            }
+            return parseFloat(formatado) || 0;
+        }
+
+        async function carregarLembretesEContas(userId) {
+            const cacheLembretes = localStorage.getItem(`cache_lembretes_${userId}`);
+            const cacheCartoes = localStorage.getItem(`cache_cartoes_${userId}`);
+
+            if (cacheLembretes && cacheCartoes) {
+                globalCartoes = JSON.parse(cacheCartoes);
+                renderizarLembretes(JSON.parse(cacheLembretes));
+            }
+
+            try {
+                const [resLembretes, resCartoes] = await Promise.all([
+                    fetch(`${API_URL}?sheet=lembretes&id_usuario=${userId}`),
+                    fetch(`${API_URL}?sheet=cartoes&id_usuario=${userId}`)
+                ]);
+
+                const lembretes = await resLembretes.json();
+                globalCartoes = await resCartoes.json();
+
+                localStorage.setItem(`cache_lembretes_${userId}`, JSON.stringify(lembretes));
+                localStorage.setItem(`cache_cartoes_${userId}`, JSON.stringify(globalCartoes));
+
+                renderizarLembretes(lembretes);
+            } catch (e) {
+                console.error("Erro ao carregar dados:", e);
+                if (!cacheLembretes) {
+                    document.getElementById('lista-lembretes').innerHTML = '<p style="text-align:center; color:#cf1d30;">Erro ao conectar à base de dados.</p>';
+                }
+            }
+        }
+
+        function renderizarLembretes(lembretes) {
+            globalLembretes = lembretes.error ? [] : lembretes;
+            const container = document.getElementById('lista-lembretes');
+
+            const pendentes = globalLembretes.filter(l => l.status === 'pendente');
+
+            if(pendentes.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 40px 20px;">
+                        <i class="fa-regular fa-calendar-check" style="font-size: 3rem; color: #2ed573; margin-bottom: 15px;"></i>
+                        <p style="color:#a0a0b0;">Tudo pago! Nenhum compromisso pendente. 🎉</p>
+                    </div>`;
+                document.getElementById('totalPendente').innerText = "R$ 0,00";
+                return;
+            }
+
+            const grupos = {};
+            pendentes.forEach(l => {
+                const chave = (l.grupo_id && l.grupo_id.trim() !== "") ? l.grupo_id.toLowerCase().trim() : l.titulo.toLowerCase().trim();
+                if (!grupos[chave]) {
+                    grupos[chave] = [];
+                }
+                grupos[chave].push(l);
+            });
+
+            const proximoDeCadaGrupo = [];
+            for (const chave in grupos) {
+                const itensDoGrupo = grupos[chave];
+                itensDoGrupo.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
+                proximoDeCadaGrupo.push(itensDoGrupo[0]); 
+            }
+
+            proximoDeCadaGrupo.sort((a, b) => new Date(a.data_vencimento) - new Date(b.data_vencimento));
+
+            let html = '';
+            let somaTotalPendente = 0;
+
+            proximoDeCadaGrupo.forEach(l => {
+                const valorNumerico = formatarMoedaParaNumero(l.valor);
+                somaTotalPendente += valorNumerico;
+
+                let dataFormatada = l.data_vencimento;
+                if (dataFormatada && dataFormatada.includes("T")) {
+                    dataFormatada = dataFormatada.split("T")[0];
+                }
+                
+                let dataBR = dataFormatada.split('-').reverse().join('/');
+
+                const hoje = new Date();
+                hoje.setHours(0,0,0,0);
+                const dataVenc = new Date(dataFormatada + "T12:00:00");
+                const estaAtrasado = dataVenc < hoje;
+
+                const cartao = globalCartoes.find(c => String(c.id_cartao) === String(l.id_cartao));
+                const nomeBanco = cartao ? cartao.nome_banco : "Nubank";
+
+                let iconClass = 'fa-receipt';
+                if (l.categoria === 'moradia') iconClass = 'fa-house-chimney';
+                else if (l.categoria === 'transporte') iconClass = 'fa-car-side';
+                else if (l.categoria === 'alimentacao') iconClass = 'fa-utensils';
+
+                html += `
+                <div class="reminder-card ${estaAtrasado ? 'late' : ''}">
+                    <div class="card-top">
+                        <div class="reminder-info">
+                            <div class="reminder-icon cat-${l.categoria || 'outros'}">
+                                <i class="fa-solid ${iconClass}"></i>
+                            </div>
+                            <div class="info-text">
+                                <h4>${l.titulo}</h4>
+                                <p style="color: ${estaAtrasado ? '#ff4757' : '#a0a0b0'}">
+                                    Vence dia ${dataBR} ${estaAtrasado ? '(Atrasado!)' : ''}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="reminder-value" style="color: ${estaAtrasado ? '#ff4757' : '#ffffff'}">
+                            R$ ${valorNumerico.toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="card-bottom">
+                        <div class="account-tag">
+                            <i class="fa-solid fa-wallet"></i> ${nomeBanco}
+                        </div>
+                        <button class="btn-pay" onclick="pagarLembrete('${l.id_lembrete}')">
+                            <i class="fa-solid fa-check"></i> Marcar como Pago
+                        </button>
+                    </div>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+            document.getElementById('totalPendente').innerText = `R$ ${somaTotalPendente.toFixed(2)}`;
+        }
+
+        function pagarLembrete(idLembrete) {
+            const lembrete = globalLembretes.find(l => String(l.id_lembrete) === String(idLembrete));
+            if (!lembrete) return;
+
+            idLembreteEmPagamento = idLembrete;
+            document.getElementById('confirmarTitulo').innerText = lembrete.titulo;
+            
+            // Pega o valor oficial da base de dados e injeta no modal já com a máscara perfeita do Brasil
+            let valorPreenchido = formatarMoedaParaNumero(lembrete.valor).toFixed(2);
+            valorPreenchido = valorPreenchido.replace('.', ',');
+            valorPreenchido = valorPreenchido.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+            
+            document.getElementById('confirmarValorInput').value = valorPreenchido;
+            document.getElementById('confirmPaymentModal').style.display = 'flex';
+        }
+
+        function fecharModalConfirmar() {
+            document.getElementById('confirmPaymentModal').style.display = 'none';
+            idLembreteEmPagamento = null;
+        }
+
+        async function executarPagamentoComValorAjustado() {
+            if (!idLembreteEmPagamento) return;
+            const userId = localStorage.getItem('appFinanceiro_userId');
+            
+            const lembrete = globalLembretes.find(l => String(l.id_lembrete) === String(idLembreteEmPagamento));
+            if (!lembrete) return;
+
+            const valorEfetivo = formatarMoedaParaNumero(document.getElementById('confirmarValorInput').value);
+            if (isNaN(valorEfetivo) || valorEfetivo <= 0) {
+                return alert("Por favor, digite um valor de pagamento válido.");
+            }
+
+            const btn = document.getElementById('btnFinalizarPagamento');
+            btn.innerText = "Processando..."; btn.style.opacity = "0.7";
+
+            // ⚠️ CORREÇÃO: Salva o ID exato nesta variável segura antes de fechar o modal
+            const idParaBaixa = lembrete.id_lembrete;
+
+            // Lógica Otimista (altera a tela na hora)
+            lembrete.status = 'pago';
+            renderizarLembretes(globalLembretes);
+            fecharModalConfirmar(); // Agora pode fechar e limpar a variável global sem medo!
+
+            let idContaValidada = lembrete.id_cartao;
+            if (!idContaValidada) {
+                const cartaoNubank = globalCartoes.find(c => c.nome_banco.toLowerCase().includes('nubank'));
+                if (cartaoNubank) idContaValidada = cartaoNubank.id_cartao;
+            }
+
+            const payloadLancamento = {
+                id_lancamento: Date.now().toString(),
+                id_usuario: userId,
+                tipo_pagamento: "debito",
+                titulo: lembrete.titulo,
+                valor: valorEfetivo, 
+                data: new Date().toISOString().split('T')[0],
+                parcelas: "1",
+                categoria: lembrete.categoria || "outros",
+                id_cartao: idContaValidada
+            };
+
+            try {
+                // 1. Dá baixa no status do boleto para 'pago'
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' }, // Restaurado ao padrão do backup
+                    body: JSON.stringify({
+                        sheet: "lembretes",
+                        action: "update",
+                        id_lembrete: idParaBaixa, // ⚠️ Usa a variável salva!
+                        status: "pago"
+                    })
+                });
+
+                // PAUSA ESTRATÉGICA DE 1.5 SEGUNDOS PARA O GOOGLE "RESPIRAR"
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // 2. Insere a despesa no extrato
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' }, // Restaurado ao padrão do backup
+                    body: JSON.stringify({
+                        sheet: "lancamentos",
+                        action: "create",
+                        ...payloadLancamento
+                    })
+                });
+
+                const cacheLancamentos = localStorage.getItem(`cache_lancamentos_${userId}`);
+                let arrayLancamentos = cacheLancamentos ? JSON.parse(cacheLancamentos) : [];
+                arrayLancamentos.push(payloadLancamento);
+                localStorage.setItem(`cache_lancamentos_${userId}`, JSON.stringify(arrayLancamentos));
+
+                btn.innerText = "Confirmar e Debitar"; btn.style.opacity = "1";
+                setTimeout(() => carregarLembretesEContas(userId), 1500);
+
+            } catch (error) {
+                console.error("Erro:", error);
+                alert("Erro ao sincronizar com a planilha. Verifique sua conexão.");
+                btn.innerText = "Confirmar e Debitar"; btn.style.opacity = "1";
+            }
+        }
+
+        function abrirModalNovo() { document.getElementById('newReminderModal').style.display = 'flex'; }
+        function fecharModalNovo() { document.getElementById('newReminderModal').style.display = 'none'; document.getElementById('newReminderForm').reset(); }
+
+        async function salvarLembrete() {
+            const userId = localStorage.getItem('appFinanceiro_userId');
+            const tituloOriginal = document.getElementById('lembreteTitulo').value;
+            const grupo = document.getElementById('lembreteGrupo').value;
+            const valor = document.getElementById('lembreteValor').value; 
+            const dataInicial = document.getElementById('lembreteData').value;
+            const categoria = document.getElementById('lembreteCategoria').value;
+            const ocorrencias = parseInt(document.getElementById('lembreteOcorrencias').value) || 1;
+
+            const cartaoNubank = globalCartoes.find(c => c.nome_banco.toLowerCase().includes('nubank'));
+
+            if (!cartaoNubank) {
+                return alert("Não foi possível encontrar nenhum cartão chamado Nubank cadastrado!");
+            }
+
+            if(!tituloOriginal || !grupo || !valor || !dataInicial) {
+                return alert("Preencha todos os campos do lembrete!");
+            }
+
+            const btn = document.getElementById('btnSalvarLembrete');
+            btn.innerText = "Aguarde, gravando..."; btn.style.opacity = "0.7";
+
+            const dataBase = new Date(dataInicial + "T12:00:00");
+
+            try {
+                // Envia uma parcela de cada vez, com uma pausa, para não travar a planilha
+                for (let i = 0; i < ocorrencias; i++) {
+                    let dataVencimentoMensal = new Date(dataBase.getFullYear(), dataBase.getMonth() + i, dataBase.getDate(), 12, 0, 0);
+                    let dataString = dataVencimentoMensal.toISOString().split('T')[0];
+                    let tituloEditado = ocorrencias > 1 ? `${tituloOriginal} (${i+1}/${ocorrencias})` : tituloOriginal;
+
+                    const payload = {
+                        id_lembrete: (Date.now() + i).toString(),
+                        id_usuario: userId,
+                        grupo_id: grupo,
+                        titulo: tituloEditado,
+                        valor: valor,
+                        data_vencimento: dataString,
+                        status: "pendente",
+                        id_cartao: cartaoNubank.id_cartao, 
+                        categoria: categoria
+                    };
+
+                    await fetch(API_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            sheet: "lembretes",
+                            action: "create",
+                            ...payload
+                        })
+                    });
+
+                    // Pausa de 800 milissegundos entre a gravação de cada parcela
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                }
+
+                fecharModalNovo();
+                btn.innerText = "Criar Lembrete"; btn.style.opacity = "1";
+                setTimeout(() => carregarLembretesEContas(userId), 1000);
+
+            } catch (error) {
+                alert("Erro ao criar lembretes. Tente de novo.");
+                btn.innerText = "Criar Lembrete"; btn.style.opacity = "1";
+            }
+        }
+    </script>
+</body>
+</html>
