@@ -160,6 +160,13 @@
                 <p style="font-size: 0.85rem; color: #a0a0b0;">Você está dando baixa no compromisso:</p>
                 <h4 id="confirmarTitulo" style="font-size: 1.1rem; margin-top: 5px; color: #ffffff; font-weight: 600;">---</h4>
             </div>
+            
+            <!-- NOVO CAMPO: Data do Pagamento -->
+            <div class="form-group">
+                <label>Data do Pagamento</label>
+                <input type="date" id="confirmarDataInput" class="form-control" required>
+            </div>
+
             <div class="form-group">
                 <label>Valor Real Pago (R$)</label>
                 <input type="text" inputmode="numeric" id="confirmarValorInput" class="form-control" placeholder="0,00" oninput="mascaraMoeda(this)" required>
@@ -345,6 +352,11 @@
             valorPreenchido = valorPreenchido.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
             
             document.getElementById('confirmarValorInput').value = valorPreenchido;
+
+            // NOVO CÓDIGO: Injeta a data de hoje automaticamente ao abrir o modal
+            const hoje = new Date().toISOString().split('T')[0];
+            document.getElementById('confirmarDataInput').value = hoje;
+
             document.getElementById('confirmPaymentModal').style.display = 'flex';
         }
 
@@ -382,13 +394,15 @@
                 if (cartaoNubank) idContaValidada = cartaoNubank.id_cartao;
             }
 
+            const dataPagamentoSelecionada = document.getElementById('confirmarDataInput').value;
+
             const payloadLancamento = {
                 id_lancamento: Date.now().toString(),
                 id_usuario: userId,
                 tipo_pagamento: "debito",
                 titulo: lembrete.titulo,
                 valor: valorEfetivo, 
-                data: new Date().toISOString().split('T')[0],
+                data: dataPagamentoSelecionada, // <-- Alterado para usar a data selecionada
                 parcelas: "1",
                 categoria: lembrete.categoria || "outros",
                 id_cartao: idContaValidada
